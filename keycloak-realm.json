@@ -1,0 +1,94 @@
+{
+  "realm": "annotation-realm",
+  "enabled": true,
+  "displayName": "Annotation Agreement Studio Realm",
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "roles": {
+    "realm": [
+      {
+        "name": "viewer",
+        "description": "Read-only access to annotation tasks, metrics, and consensus views"
+      },
+      {
+        "name": "analyst",
+        "description": "Annotator and adjudication analyst access for creating tasks, submitting annotations, and reconciling"
+      },
+      {
+        "name": "admin",
+        "description": "Full administrative access including schema management, bulk deletions, and audit configurations"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "annotation-agreement-studio-client",
+      "name": "Annotation Agreement Studio SPA",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://127.0.0.1:3000/*",
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://127.0.0.1:3000",
+        "http://localhost:3000"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://127.0.0.1:3000/*"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "roles",
+        "profile",
+        "email"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "demo-analyst",
+      "enabled": true,
+      "email": "analyst@example.com",
+      "firstName": "Annotation",
+      "lastName": "Analyst",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "analyst-demo-pass",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "analyst"
+      ]
+    },
+    {
+      "username": "demo-admin",
+      "enabled": true,
+      "email": "admin@example.com",
+      "firstName": "Studio",
+      "lastName": "Administrator",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin-demo-pass",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "admin"
+      ]
+    }
+  ]
+}

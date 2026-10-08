@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "name": "annotation-agreement-studio-ryan-vo",
+  "owner": "A220man",
+  "email": "ryandtvo@gmail.com",
+  "domain": "nlp",
+  "workflows": [
+    "Span and classification annotation task coordination",
+    "Inter-annotator agreement metrics and disagreement matrix calculation",
+    "Label reconciliation and consensus adjudication with audit history"
+  ],
+  "auth": "oidc-keycloak-saml-broker",
+  "llm_providers": [
+    "openai-compatible",
+    "anthropic",
+    "gemini",
+    "ollama"
+  ],
+  "summary": "Coordinate multi-annotator span and classification tasks, calculate Cohen/Fleiss kappa and confusion matrices, and reconcile consensus with immutable audit history.",
+  "version": "1.0.0"
+}
