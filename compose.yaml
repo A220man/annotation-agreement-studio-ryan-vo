@@ -1,0 +1,71 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.7
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin_password_demo_only
+      KC_HEALTH_ENABLED: "true"
+      KC_HTTP_RELATIVE_PATH: /
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ./keycloak-realm.json:/opt/keycloak/data/import/realm.json:ro
+      - keycloak_data:/opt/keycloak/data
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: 127.0.0.1\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep '200 OK' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 25s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      ENVIRONMENT: development
+      PORT: "8000"
+      HOST: "0.0.0.0"
+      DEMO_MODE: "true"
+      DATABASE_URL: "sqlite:////app/data/annotation_studio.db"
+      OIDC_ISSUER_URL: "http://127.0.0.1:8080/realms/annotation-realm"
+      OIDC_AUDIENCE: "annotation-agreement-studio"
+      OIDC_CLIENT_ID: "annotation-agreement-studio-client"
+      LLM_PROVIDER: "openai-compatible"
+      LLM_MODEL: "gpt-4o-mini"
+      LLM_BASE_URL: ""
+      LLM_API_KEY: ""
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - backend_data:/app/data
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:3000:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  keycloak_data:
+  backend_data:
