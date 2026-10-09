@@ -8,10 +8,10 @@ WORKDIR /app
 
 RUN groupadd -r appuser && useradd -r -g appuser -d /app -s /sbin/nologin appuser
 
-COPY requirements.txt .
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app/ ./app/
+COPY backend/app/ ./app/
 COPY VERSION /app/VERSION
 
 RUN mkdir -p /app/data && chown -R appuser:appuser /app
