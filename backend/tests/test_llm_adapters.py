@@ -1,8 +1,8 @@
 import pytest
 import httpx
 from unittest.mock import AsyncMock, patch
-from backend.app.core.config import settings
-from backend.app.services.llm_advisor import (
+from app.core.config import settings
+from app.services.llm_advisor import (
     AdvisoryRequest,
     request_advisory_explanation,
     redact_sensitive_strings,

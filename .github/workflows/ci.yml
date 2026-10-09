@@ -21,7 +21,7 @@ jobs:
           pip install -r backend/requirements.txt
       - name: Run backend tests
         env:
-          PYTHONPATH: "backend:."
+          PYTHONPATH: "backend"
           DATABASE_URL: "sqlite:///:memory:"
           ENVIRONMENT: test
           DEMO_MODE: "true"

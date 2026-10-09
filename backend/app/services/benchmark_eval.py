@@ -1,12 +1,12 @@
 from typing import Dict, Any, List
-from backend.app.services.agreement_engine import (
+from app.services.agreement_engine import (
     compute_cohen_kappa,
     compute_fleiss_kappa,
     compute_krippendorff_alpha_nominal,
     compute_span_overlap_f1,
     SpanItem,
 )
-from backend.app.services.reconciliation_engine import (
+from app.services.reconciliation_engine import (
     reconcile_classification,
     reconcile_spans,
 )
@@ -139,7 +139,7 @@ def run_evaluation_benchmark() -> Dict[str, Any]:
             {"case": "Honorific/prefix omission", "impact": "Partial multi-word overlap ('Sarah Lin' vs 'Dr. Sarah Lin')", "mitigation": "Majority vote boundary resolution selects complete span"},
             {"case": "Category boundary ambiguity", "impact": "Reduces raw kappa on multi-aspect sentiment", "mitigation": "Flags items with kappa < 0.70 to adjudication queue"}
         ],
-        "reproducible_command": "PYTHONPATH=backend python3 -m backend.app.services.benchmark_eval",
+        "reproducible_command": "PYTHONPATH=backend python3 -m app.services.benchmark_eval",
     }
 
 if __name__ == "__main__":

@@ -4,10 +4,10 @@ from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
-from backend.app.core.database import get_db
-from backend.app.core.security import require_role, AuthenticatedUser
-from backend.app.models.entities import Annotation, Document, Task, utc_now
-from backend.app.api.deps import record_audit
+from app.core.database import get_db
+from app.core.security import require_role, AuthenticatedUser
+from app.models.entities import Annotation, Document, Task, utc_now
+from app.api.deps import record_audit
 
 router = APIRouter(prefix="/annotations", tags=["Annotations"])
 

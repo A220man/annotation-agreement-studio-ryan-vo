@@ -5,7 +5,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
 from pydantic import BaseModel
 import httpx
-from backend.app.core.config import settings
+from app.core.config import settings
 
 bearer_scheme = HTTPBearer(auto_error=False)
 

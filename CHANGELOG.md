@@ -5,6 +5,12 @@ All notable changes to Annotation Agreement Studio will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- Unified backend imports on the `app` package (matching the Docker `uvicorn app.main:app` entrypoint). Mixed `backend.app`/`app` imports loaded the security module twice, so the OIDC test's JWKS patch never reached the running app and hosted CI failed.
+- README run and benchmark commands now use the same entrypoint.
+
 ## [1.0.0] - 2026-10-08
 
 ### Added

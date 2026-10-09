@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
-from backend.app.core.security import require_role, AuthenticatedUser
-from backend.app.services.benchmark_eval import run_evaluation_benchmark
+from app.core.security import require_role, AuthenticatedUser
+from app.services.benchmark_eval import run_evaluation_benchmark
 
 router = APIRouter(prefix="/evaluation", tags=["Evaluation"])
 

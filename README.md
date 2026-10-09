@@ -78,7 +78,7 @@ To demonstrate empirical validity, Annotation Agreement Studio includes a built-
 ### Reproducible Evaluation Command
 
 ```bash
-PYTHONPATH=backend python3 -m backend.app.services.benchmark_eval
+PYTHONPATH=backend python3 -m app.services.benchmark_eval
 ```
 
 ### Measured Benchmark Results
@@ -122,7 +122,7 @@ pip install -r backend/requirements.txt
 PYTHONPATH=. pytest backend/tests -v
 
 # Start backend server
-uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
+cd backend && uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 ### 2. Frontend Setup

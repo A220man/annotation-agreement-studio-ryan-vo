@@ -4,10 +4,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
-from backend.app.core.database import Base, get_db
-from backend.app.core.config import settings
-from backend.app.core.security import create_demo_access_token
-from backend.app.main import app
+from app.core.database import Base, get_db
+from app.core.config import settings
+from app.core.security import create_demo_access_token
+from app.main import app
 
 settings.ENVIRONMENT = "test"
 settings.DEMO_MODE = True

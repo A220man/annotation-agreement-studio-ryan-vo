@@ -1,6 +1,6 @@
 import pytest
 from fastapi import status
-from backend.app.core.config import Settings, validate_environment_safety
+from app.core.config import Settings, validate_environment_safety
 
 def test_unauthenticated_request_rejected(client):
     response = client.get("/api/tasks")

@@ -2,9 +2,9 @@ import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.app.core.config import settings, validate_environment_safety
-from backend.app.core.database import engine, Base
-from backend.app.api.routes import (
+from app.core.config import settings, validate_environment_safety
+from app.core.database import engine, Base
+from app.api.routes import (
     auth,
     tasks,
     annotations,

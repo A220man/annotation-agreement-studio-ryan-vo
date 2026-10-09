@@ -3,7 +3,7 @@ import re
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
 import httpx
-from backend.app.core.config import settings
+from app.core.config import settings
 
 class AdvisoryRequest(BaseModel):
     document_text: str
