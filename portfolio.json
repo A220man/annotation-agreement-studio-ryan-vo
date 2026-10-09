@@ -17,5 +17,5 @@
     "ollama"
   ],
   "summary": "Coordinate multi-annotator span and classification tasks, calculate Cohen/Fleiss kappa and confusion matrices, and reconcile consensus with immutable audit history.",
-  "version": "1.0.0"
+  "version": "1.1.0"
 }

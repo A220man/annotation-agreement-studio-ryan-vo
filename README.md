@@ -1,6 +1,6 @@
 # Annotation Agreement Studio | Ryan Vo | AI & Machine Learning
 
-Current version: `1.0.0`.
+Current version: `1.1.0`.
 
 Annotation Agreement Studio solves the problem of unreliable, noisy human and model annotations in natural language processing (NLP) pipelines by providing a rigorous inter-annotator agreement evaluation engine, disagreement diagnostic matrices, and structured consensus adjudication. Built for NLP engineers, linguistic annotators, and machine learning researchers, the platform coordinates multi-annotator span tagging (NER, PII, BIO) and document classification tasks, computes statistical reliability metrics (Cohen's Kappa, Fleiss' Kappa, Krippendorff's Alpha, and token-level span IoU/F1), diagnoses boundary misalignments, and reconciles gold-standard datasets with an immutable audit trail.
 
