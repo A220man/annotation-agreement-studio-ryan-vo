@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1
+
+- Fix backend Docker builds in CI and Compose by including the root VERSION file in a restricted repository-root build context.
+
 ## [1.1.0] - 2026-10-09
 
 All notable changes to Annotation Agreement Studio will be documented in this file.

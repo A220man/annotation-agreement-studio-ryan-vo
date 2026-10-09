@@ -56,7 +56,8 @@ jobs:
       - name: Build backend Docker image
         uses: docker/build-push-action@v6
         with:
-          context: ./backend
+          context: .
+          file: backend/Dockerfile
           push: false
           tags: annotation-agreement-studio-backend:ci
       - name: Build frontend Docker image
