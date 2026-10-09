@@ -4,13 +4,13 @@ from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
-from backend.app.core.database import get_db
-from backend.app.core.security import require_role, AuthenticatedUser
-from backend.app.models.entities import Task, Document, Annotation, Consensus, utc_now
-from backend.app.services.reconciliation_engine import (
+from app.core.database import get_db
+from app.core.security import require_role, AuthenticatedUser
+from app.models.entities import Task, Document, Annotation, Consensus, utc_now
+from app.services.reconciliation_engine import (
     reconcile_classification, reconcile_spans, export_to_jsonl, export_to_conll, export_to_huggingface,
 )
-from backend.app.api.deps import record_audit
+from app.api.deps import record_audit
 
 router = APIRouter(prefix="/reconciliation", tags=["Reconciliation"])
 

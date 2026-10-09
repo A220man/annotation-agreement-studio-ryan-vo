@@ -1,8 +1,8 @@
 from typing import Dict, Any, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from backend.app.core.config import settings
-from backend.app.core.security import (
+from app.core.config import settings
+from app.core.security import (
     AuthenticatedUser,
     get_current_user,
     create_demo_access_token,

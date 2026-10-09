@@ -3,10 +3,10 @@ from collections import defaultdict
 from typing import Dict, List, Tuple
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from backend.app.core.database import get_db
-from backend.app.core.security import require_role, AuthenticatedUser
-from backend.app.models.entities import Task, Document, Annotation
-from backend.app.services.agreement_engine import (
+from app.core.database import get_db
+from app.core.security import require_role, AuthenticatedUser
+from app.models.entities import Task, Document, Annotation
+from app.services.agreement_engine import (
     SpanItem, PairwiseMetric, DisagreementPair, BoundaryDiagnostic, AgreementSummary,
     interpret_kappa, compute_cohen_kappa, compute_fleiss_kappa, compute_krippendorff_alpha_nominal,
     tokenize_with_offsets, spans_to_bio_tags, compute_span_overlap_f1, diagnose_boundary_misalignment,

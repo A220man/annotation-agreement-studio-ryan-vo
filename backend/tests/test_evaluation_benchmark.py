@@ -1,4 +1,4 @@
-from backend.app.services.benchmark_eval import run_evaluation_benchmark
+from app.services.benchmark_eval import run_evaluation_benchmark
 
 def test_evaluation_benchmark_execution():
     report = run_evaluation_benchmark()

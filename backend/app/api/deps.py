@@ -1,9 +1,9 @@
 import json
 from typing import Optional
 from sqlalchemy.orm import Session
-from backend.app.core.database import get_db
-from backend.app.core.security import get_current_user, require_role, AuthenticatedUser
-from backend.app.models.entities import AuditLog, utc_now
+from app.core.database import get_db
+from app.core.security import get_current_user, require_role, AuthenticatedUser
+from app.models.entities import AuditLog, utc_now
 
 def record_audit(
     db: Session,

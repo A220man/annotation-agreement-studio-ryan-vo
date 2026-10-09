@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "annotation-agreement-studio-ryan-vo"
-version = "1.0.0"
+version = "1.1.0"
 description = "NLP inter-annotator agreement studio evaluating token span and document class reliability via Cohen/Fleiss kappa and consensus reconciliation."
 readme = "README.md"
 requires-python = ">=3.12"

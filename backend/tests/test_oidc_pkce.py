@@ -6,8 +6,8 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 from jose import jwt
 from fastapi import status
-from backend.app.core.config import settings
-import backend.app.core.security as security_module
+from app.core.config import settings
+import app.core.security as security_module
 
 @pytest.fixture
 def rsa_keypair():

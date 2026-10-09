@@ -1,5 +1,5 @@
 import pytest
-from backend.app.services.agreement_engine import (
+from app.services.agreement_engine import (
     compute_cohen_kappa,
     compute_fleiss_kappa,
     compute_krippendorff_alpha_nominal,

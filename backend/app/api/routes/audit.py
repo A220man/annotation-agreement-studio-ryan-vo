@@ -3,9 +3,9 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from backend.app.core.database import get_db
-from backend.app.core.security import require_role, AuthenticatedUser
-from backend.app.models.entities import AuditLog
+from app.core.database import get_db
+from app.core.security import require_role, AuthenticatedUser
+from app.models.entities import AuditLog
 
 router = APIRouter(prefix="/audit", tags=["Audit Log"])
 

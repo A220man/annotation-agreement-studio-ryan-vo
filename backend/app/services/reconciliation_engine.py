@@ -1,7 +1,7 @@
 import json
 from collections import Counter
 from typing import List, Dict, Any, Optional, Tuple
-from backend.app.services.agreement_engine import SpanItem, tokenize_with_offsets, spans_to_bio_tags
+from app.services.agreement_engine import SpanItem, tokenize_with_offsets, spans_to_bio_tags
 
 class ReconciliationResult:
     def __init__(self, task_type: str, class_label: Optional[str] = None, spans: Optional[List[Dict[str, Any]]] = None, agreement_ratio: float = 1.0, strategy_used: str = "majority_vote", notes: str = ""):
