@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "current_feature": "agreement-report-export",
+  "features": [
+    {
+      "id": "agreement-report-export",
+      "title": "Agreement Report Export",
+      "status": "done",
+      "acceptance": [
+        "GET /api/agreement/tasks/{task_id}/export?format=json returns full agreement summary as downloadable JSON",
+        "GET /api/agreement/tasks/{task_id}/export?format=csv returns disagreement matrix and boundary diagnostics as CSV",
+        "Exported reports include Cohen/Fleiss/Krippendorff metrics, confusion matrix, and boundary diagnostics",
+        "Export respects RBAC (requires viewer role)",
+        "Frontend adds Export button to Agreement Dashboard with format selection"
+      ],
+      "implementation": [
+        "backend/app/api/routes/agreement.py",
+        "backend/app/services/agreement_engine.py",
+        "frontend/src/components/AgreementDashboard.tsx",
+        "frontend/src/api/client.ts"
+      ],
+      "tests": [
+        "backend/tests/test_agreement_export.py",
+        "frontend/src/components/AgreementDashboard.test.tsx"
+      ]
+    },
+    {
+      "id": "annotation-import-validation",
+      "title": "Annotation Batch Import Validation",
+      "status": "planned",
+      "acceptance": [
+        "Validates span boundaries within document text lengths on batch import",
+        "Rejects malformed span inputs with detailed error feedback"
+      ],
+      "implementation": [],
+      "tests": []
+    }
+  ]
+}

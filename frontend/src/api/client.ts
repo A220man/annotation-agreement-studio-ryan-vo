@@ -94,6 +94,22 @@ export const api = {
   agreement: {
     getTaskSummary: (taskId: string) => request<AgreementSummary>(`/api/agreement/tasks/${taskId}`),
     getDocumentDetails: (docId: string) => request<any>(`/api/agreement/documents/${docId}`),
+    exportReport: async (taskId: string, format: 'json' | 'csv' = 'json') => {
+      const fullUrl = (typeof window !== 'undefined' && window.location && window.location.origin ? window.location.origin : 'http://127.0.0.1:3000') + `/api/agreement/tasks/${taskId}/export?format=${format}`;
+      const headers: Record<string, string> = {};
+      if (inMemoryToken) headers['Authorization'] = `Bearer ${inMemoryToken}`;
+      const res = await fetch(fullUrl, { headers });
+      if (!res.ok) throw new Error(`Export failed: ${res.statusText}`);
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `agreement-report-${taskId}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    },
   },
   reconciliation: {
     autoReconcile: (taskId: string, strategy: string) =>

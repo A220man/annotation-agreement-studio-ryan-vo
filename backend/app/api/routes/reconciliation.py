@@ -41,6 +41,14 @@ class ConsensusResponse(BaseModel):
     created_at: str
     updated_at: str
 
+def _to_response(c: Consensus) -> ConsensusResponse:
+    return ConsensusResponse(
+        id=c.id, document_id=c.document_id, task_id=c.task_id, reconciled_by=c.reconciled_by,
+        status=c.status, task_type=c.task_type, class_label=c.class_label,
+        spans=json.loads(c.spans_json or "[]"), reconciliation_method=c.reconciliation_method,
+        notes=c.notes, created_at=c.created_at.isoformat(), updated_at=c.updated_at.isoformat(),
+    )
+
 @router.post("/auto/{task_id}")
 def auto_reconcile_task(
     task_id: str,
@@ -130,13 +138,7 @@ def reconcile_single_document(
         db.refresh(cons_obj)
 
     record_audit(db, "CONSENSUS_SAVED", user, "Consensus", cons_obj.id, {"document_id": document_id})
-    return ConsensusResponse(
-        id=cons_obj.id, document_id=cons_obj.document_id, task_id=cons_obj.task_id,
-        reconciled_by=cons_obj.reconciled_by, status=cons_obj.status, task_type=cons_obj.task_type,
-        class_label=cons_obj.class_label, spans=json.loads(cons_obj.spans_json or "[]"),
-        reconciliation_method=cons_obj.reconciliation_method, notes=cons_obj.notes,
-        created_at=cons_obj.created_at.isoformat(), updated_at=cons_obj.updated_at.isoformat(),
-    )
+    return _to_response(cons_obj)
 
 @router.get("/tasks/{task_id}", response_model=List[ConsensusResponse])
 def list_task_consensus(
@@ -150,15 +152,7 @@ def list_task_consensus(
     query = db.query(Consensus).filter(Consensus.task_id == task_id)
     if status_filter: query = query.filter(Consensus.status == status_filter)
     records = query.order_by(Consensus.updated_at.desc()).offset(offset).limit(limit).all()
-    return [
-        ConsensusResponse(
-            id=c.id, document_id=c.document_id, task_id=c.task_id, reconciled_by=c.reconciled_by,
-            status=c.status, task_type=c.task_type, class_label=c.class_label,
-            spans=json.loads(c.spans_json or "[]"), reconciliation_method=c.reconciliation_method,
-            notes=c.notes, created_at=c.created_at.isoformat(), updated_at=c.updated_at.isoformat(),
-        )
-        for c in records
-    ]
+    return [_to_response(c) for c in records]
 
 @router.get("/export/{task_id}")
 def export_gold_dataset(

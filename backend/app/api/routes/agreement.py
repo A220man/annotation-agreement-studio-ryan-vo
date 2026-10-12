@@ -1,7 +1,7 @@
 import json
 from collections import defaultdict
 from typing import Dict, List, Tuple
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import require_role, AuthenticatedUser
@@ -10,6 +10,7 @@ from app.services.agreement_engine import (
     SpanItem, PairwiseMetric, DisagreementPair, BoundaryDiagnostic, AgreementSummary,
     interpret_kappa, compute_cohen_kappa, compute_fleiss_kappa, compute_krippendorff_alpha_nominal,
     tokenize_with_offsets, spans_to_bio_tags, compute_span_overlap_f1, diagnose_boundary_misalignment,
+    export_agreement_json, export_agreement_csv,
 )
 
 router = APIRouter(prefix="/agreement", tags=["Agreement"])
@@ -147,3 +148,28 @@ def get_document_agreement(
         for a in annotations
     }
     return {"document_id": document_id, "task_type": doc.task.task_type, "annotations": ann_map}
+
+@router.get("/tasks/{task_id}/export")
+def export_task_agreement(
+    task_id: str,
+    format: str = Query("json", pattern="^(json|csv)$"),
+    db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(require_role("viewer")),
+):
+    """Export agreement report as JSON or CSV."""
+    summary = get_task_agreement_report(task_id=task_id, db=db, user=user)
+    if format == "json":
+        content = export_agreement_json(summary)
+        media_type = "application/json"
+        filename = f"agreement-report-{task_id}.json"
+    else:
+        content = export_agreement_csv(summary)
+        media_type = "text/csv"
+        filename = f"agreement-report-{task_id}.csv"
+
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+
