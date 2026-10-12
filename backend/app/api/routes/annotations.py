@@ -26,18 +26,9 @@ class AnnotationCreate(BaseModel):
     spans: Optional[List[SpanInput]] = None
     notes: Optional[str] = None
 
-class BatchAnnotationItem(BaseModel):
-    document_id: str
-    annotator_id: str
-    annotator_name: str
-    task_type: str
-    class_label: Optional[str] = None
-    spans: Optional[List[SpanInput]] = None
-    notes: Optional[str] = None
-
 class BatchAnnotationCreate(BaseModel):
     task_id: str
-    annotations: List[BatchAnnotationItem]
+    annotations: List[AnnotationCreate]
 
 class AnnotationResponse(BaseModel):
     id: str

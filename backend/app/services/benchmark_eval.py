@@ -11,36 +11,30 @@ from app.services.reconciliation_engine import (
     reconcile_spans,
 )
 
+def _sp(items):
+    return [{"start": s[0], "end": s[1], "label": s[2], "text": s[3]} for s in items]
+
 BENCHMARK_DATASET = [
     {
         "id": "item-01",
         "text": "Alphabet reported quarterly revenues above Wall Street estimates on Tuesday.",
         "task_type": "span",
-        "ground_truth_spans": [
-            {"start": 0, "end": 8, "label": "ORG", "text": "Alphabet"},
-            {"start": 43, "end": 54, "label": "ORG", "text": "Wall Street"},
-            {"start": 68, "end": 75, "label": "DATE", "text": "Tuesday"},
-        ],
+        "ground_truth_spans": _sp([(0, 8, "ORG", "Alphabet"), (43, 54, "ORG", "Wall Street"), (68, 75, "DATE", "Tuesday")]),
         "annotator_annotations": [
-            {"annotator_id": "annotator_A", "spans": [{"start": 0, "end": 8, "label": "ORG", "text": "Alphabet"}, {"start": 43, "end": 54, "label": "ORG", "text": "Wall Street"}, {"start": 68, "end": 75, "label": "DATE", "text": "Tuesday"}]},
-            {"annotator_id": "annotator_B", "spans": [{"start": 0, "end": 8, "label": "ORG", "text": "Alphabet"}, {"start": 43, "end": 54, "label": "MISC", "text": "Wall Street"}, {"start": 68, "end": 75, "label": "DATE", "text": "Tuesday"}]},
-            {"annotator_id": "annotator_C", "spans": [{"start": 0, "end": 8, "label": "ORG", "text": "Alphabet"}, {"start": 43, "end": 55, "label": "ORG", "text": "Wall Street "}, {"start": 68, "end": 75, "label": "DATE", "text": "Tuesday"}]},
+            {"annotator_id": "annotator_A", "spans": _sp([(0, 8, "ORG", "Alphabet"), (43, 54, "ORG", "Wall Street"), (68, 75, "DATE", "Tuesday")])},
+            {"annotator_id": "annotator_B", "spans": _sp([(0, 8, "ORG", "Alphabet"), (43, 54, "MISC", "Wall Street"), (68, 75, "DATE", "Tuesday")])},
+            {"annotator_id": "annotator_C", "spans": _sp([(0, 8, "ORG", "Alphabet"), (43, 55, "ORG", "Wall Street "), (68, 75, "DATE", "Tuesday")])},
         ],
     },
     {
         "id": "item-02",
         "text": "Dr. Sarah Lin prescribed amoxicillin 500mg for acute sinusitis symptoms.",
         "task_type": "span",
-        "ground_truth_spans": [
-            {"start": 0, "end": 13, "label": "PER", "text": "Dr. Sarah Lin"},
-            {"start": 25, "end": 36, "label": "MED", "text": "amoxicillin"},
-            {"start": 37, "end": 42, "label": "DOSAGE", "text": "500mg"},
-            {"start": 47, "end": 62, "label": "CONDITION", "text": "acute sinusitis"},
-        ],
+        "ground_truth_spans": _sp([(0, 13, "PER", "Dr. Sarah Lin"), (25, 36, "MED", "amoxicillin"), (37, 42, "DOSAGE", "500mg"), (47, 62, "CONDITION", "acute sinusitis")]),
         "annotator_annotations": [
-            {"annotator_id": "annotator_A", "spans": [{"start": 4, "end": 13, "label": "PER", "text": "Sarah Lin"}, {"start": 25, "end": 36, "label": "MED", "text": "amoxicillin"}, {"start": 37, "end": 42, "label": "DOSAGE", "text": "500mg"}, {"start": 47, "end": 62, "label": "CONDITION", "text": "acute sinusitis"}]},
-            {"annotator_id": "annotator_B", "spans": [{"start": 0, "end": 13, "label": "PER", "text": "Dr. Sarah Lin"}, {"start": 25, "end": 36, "label": "MED", "text": "amoxicillin"}, {"start": 37, "end": 42, "label": "DOSAGE", "text": "500mg"}, {"start": 47, "end": 71, "label": "CONDITION", "text": "acute sinusitis symptoms"}]},
-            {"annotator_id": "annotator_C", "spans": [{"start": 0, "end": 13, "label": "PER", "text": "Dr. Sarah Lin"}, {"start": 25, "end": 36, "label": "MED", "text": "amoxicillin"}, {"start": 37, "end": 42, "label": "DOSAGE", "text": "500mg"}, {"start": 47, "end": 62, "label": "CONDITION", "text": "acute sinusitis"}]},
+            {"annotator_id": "annotator_A", "spans": _sp([(4, 13, "PER", "Sarah Lin"), (25, 36, "MED", "amoxicillin"), (37, 42, "DOSAGE", "500mg"), (47, 62, "CONDITION", "acute sinusitis")])},
+            {"annotator_id": "annotator_B", "spans": _sp([(0, 13, "PER", "Dr. Sarah Lin"), (25, 36, "MED", "amoxicillin"), (37, 42, "DOSAGE", "500mg"), (47, 71, "CONDITION", "acute sinusitis symptoms")])},
+            {"annotator_id": "annotator_C", "spans": _sp([(0, 13, "PER", "Dr. Sarah Lin"), (25, 36, "MED", "amoxicillin"), (37, 42, "DOSAGE", "500mg"), (47, 62, "CONDITION", "acute sinusitis")])},
         ],
     },
     {

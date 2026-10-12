@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Task, AgreementSummary } from '../types/api';
 import { api } from '../api/client';
-import { Split, UserX } from 'lucide-react';
+import { Split, UserX, Download } from 'lucide-react';
 
 export const AgreementDashboard: React.FC<{ task: Task | null }> = ({ task }) => {
   const [summary, setSummary] = useState<AgreementSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     if (!task) return;
@@ -18,12 +19,38 @@ export const AgreementDashboard: React.FC<{ task: Task | null }> = ({ task }) =>
       .finally(() => setLoading(false));
   }, [task]);
 
+  const handleExport = async (format: 'json' | 'csv') => {
+    if (!task) return;
+    setExporting(true);
+    try {
+      await api.agreement.exportReport(task.id, format);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (!task) return <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Select a task to view metrics.</div>;
 
   return (
     <div style={{ maxWidth: '1280px', margin: '1.5rem auto', padding: '0 1.5rem' }}>
-      <h2 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.25rem' }}>Agreement: {task.name}</h2>
-      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Cohen/Fleiss kappa, confusion matrix, and span boundary diagnostics.</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <div>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.25rem' }}>Agreement: {task.name}</h2>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Cohen/Fleiss kappa, confusion matrix, and span boundary diagnostics.</p>
+        </div>
+        {summary && summary.cohen_kappas.length > 0 && (
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <button onClick={() => handleExport('json')} disabled={exporting} className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
+              <Download size={14} /> Export JSON
+            </button>
+            <button onClick={() => handleExport('csv')} disabled={exporting} className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
+              <Download size={14} /> Export CSV
+            </button>
+          </div>
+        )}
+      </div>
 
       {loading ? <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Calculating metrics...</div> : error ? (
         <div style={{ padding: '1rem', color: 'var(--danger)', background: 'rgba(248,113,113,0.1)', borderRadius: '0.375rem' }}>{error}</div>

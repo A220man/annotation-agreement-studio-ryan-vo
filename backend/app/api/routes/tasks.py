@@ -45,6 +45,13 @@ class DocumentResponse(BaseModel):
     has_consensus: bool = False
     created_at: str
 
+def _task_resp(t: Task, count: int, schema: Optional[list] = None) -> TaskResponse:
+    return TaskResponse(
+        id=t.id, name=t.name, description=t.description, task_type=t.task_type,
+        guidelines=t.guidelines, labels_schema=schema if schema is not None else json.loads(t.labels_schema or "[]"),
+        document_count=count, created_at=t.created_at.isoformat(), updated_at=t.updated_at.isoformat(),
+    )
+
 @router.get("", response_model=List[TaskResponse])
 def list_tasks(
     task_type: Optional[str] = None,
@@ -58,15 +65,7 @@ def list_tasks(
     if task_type: query = query.filter(Task.task_type == task_type)
     if search: query = query.filter(Task.name.ilike(f"%{search}%"))
     tasks = query.order_by(Task.created_at.desc()).offset(offset).limit(limit).all()
-    return [
-        TaskResponse(
-            id=t.id, name=t.name, description=t.description, task_type=t.task_type,
-            guidelines=t.guidelines, labels_schema=json.loads(t.labels_schema or "[]"),
-            document_count=db.query(Document).filter(Document.task_id == t.id).count(),
-            created_at=t.created_at.isoformat(), updated_at=t.updated_at.isoformat(),
-        )
-        for t in tasks
-    ]
+    return [_task_resp(t, db.query(Document).filter(Document.task_id == t.id).count()) for t in tasks]
 
 @router.post("", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
 def create_task(
@@ -83,11 +82,7 @@ def create_task(
     db.commit()
     db.refresh(task)
     record_audit(db, "TASK_CREATED", user, "Task", task.id, {"name": task.name})
-    return TaskResponse(
-        id=task.id, name=task.name, description=task.description, task_type=task.task_type,
-        guidelines=task.guidelines, labels_schema=payload.labels_schema, document_count=0,
-        created_at=task.created_at.isoformat(), updated_at=task.updated_at.isoformat(),
-    )
+    return _task_resp(task, 0, payload.labels_schema)
 
 @router.get("/{task_id}", response_model=TaskResponse)
 def get_task(
@@ -97,12 +92,7 @@ def get_task(
 ):
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task: raise HTTPException(status_code=404, detail="Task not found")
-    return TaskResponse(
-        id=task.id, name=task.name, description=task.description, task_type=task.task_type,
-        guidelines=task.guidelines, labels_schema=json.loads(task.labels_schema or "[]"),
-        document_count=db.query(Document).filter(Document.task_id == task.id).count(),
-        created_at=task.created_at.isoformat(), updated_at=task.updated_at.isoformat(),
-    )
+    return _task_resp(task, db.query(Document).filter(Document.task_id == task.id).count())
 
 @router.delete("/{task_id}")
 def delete_task(

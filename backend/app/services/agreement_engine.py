@@ -1,5 +1,8 @@
 import math
 import re
+import csv
+import io
+from datetime import datetime
 from typing import List, Dict, Tuple, Optional
 from pydantic import BaseModel
 
@@ -187,3 +190,60 @@ def diagnose_boundary_misalignment(text: str, s1: SpanItem, s2: SpanItem, doc_id
         span_1=(s1.start, s1.end), span_2=(s2.start, s2.end), text_1=t1, text_2=t2,
         misalignment_type=m_type, offset_difference=diff
     )
+
+def export_agreement_json(summary: AgreementSummary) -> str:
+    """Serialize AgreementSummary to JSON string."""
+    return summary.model_dump_json(indent=2)
+
+def export_agreement_csv(summary: AgreementSummary) -> str:
+    """Serialize AgreementSummary to CSV with multiple sections."""
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Section 1: Summary metrics
+    writer.writerow(["Section", "Summary Metrics"])
+    writer.writerow(["Metric", "Value"])
+    for m, v in [
+        ("Task ID", summary.task_id), ("Task Type", summary.task_type),
+        ("Total Documents", summary.total_documents), ("Total Annotations", summary.total_annotations),
+        ("Annotators", "; ".join(summary.annotator_ids)), ("Overall Mean Kappa", summary.overall_mean_kappa),
+        ("Fleiss Kappa", summary.fleiss_kappa if summary.fleiss_kappa is not None else "N/A"),
+        ("Krippendorff Alpha", summary.krippendorff_alpha if summary.krippendorff_alpha is not None else "N/A"),
+        ("Token Span F1", summary.token_span_f1 if summary.token_span_f1 is not None else "N/A"),
+        ("Span Exact Match Ratio", summary.span_exact_match_ratio if summary.span_exact_match_ratio is not None else "N/A"),
+        ("Outlier Annotators", "; ".join(summary.outlier_annotators) if summary.outlier_annotators else "None"),
+    ]:
+        writer.writerow([m, v])
+    writer.writerow([])
+
+    # Section 2: Pairwise Cohen's Kappa
+    writer.writerow(["Section", "Pairwise Cohen's Kappa"])
+    writer.writerow(["Annotator 1", "Annotator 2", "Kappa", "Observed Agreement", "Expected Agreement", "Items Compared", "Interpretation"])
+    for pm in summary.cohen_kappas:
+        writer.writerow([pm.annotator_1, pm.annotator_2, pm.cohen_kappa, pm.observed_agreement, pm.expected_agreement, pm.items_compared, pm.interpretation])
+    writer.writerow([])
+
+    # Section 3: Disagreement Matrix
+    writer.writerow(["Section", "Disagreement Matrix"])
+    labels = sorted(set(list(summary.disagreement_matrix.keys()) + [l for row in summary.disagreement_matrix.values() for l in row.keys()]))
+    writer.writerow([""] + labels)
+    for l1 in labels:
+        row = [l1] + [summary.disagreement_matrix.get(l1, {}).get(l2, 0) for l2 in labels]
+        writer.writerow(row)
+    writer.writerow([])
+
+    # Section 4: Top Disagreements
+    writer.writerow(["Section", "Top Disagreements"])
+    writer.writerow(["Label 1", "Label 2", "Count", "Percentage"])
+    for td in summary.top_disagreements:
+        writer.writerow([td.label_1, td.label_2, td.count, td.percentage])
+    writer.writerow([])
+
+    # Section 5: Boundary Diagnostics
+    writer.writerow(["Section", "Boundary Diagnostics"])
+    writer.writerow(["Document ID", "Annotator 1", "Annotator 2", "Label", "Span 1", "Span 2", "Text 1", "Text 2", "Misalignment Type", "Offset Difference"])
+    for bd in summary.boundary_diagnostics:
+        writer.writerow([bd.document_id, bd.annotator_1, bd.annotator_2, bd.label, f"{bd.span_1[0]}-{bd.span_1[1]}", f"{bd.span_2[0]}-{bd.span_2[1]}", bd.text_1, bd.text_2, bd.misalignment_type, bd.offset_difference])
+
+    return output.getvalue()
+

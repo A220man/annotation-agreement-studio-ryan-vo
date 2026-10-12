@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.0 — work-in-progress checkpoint
+
+Partial code published for continued development. Known issues: STATUS.md.
+
 ## 1.1.1
 
 - Fix backend Docker builds in CI and Compose by including the root VERSION file in a restricted repository-root build context.
@@ -12,6 +16,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Added
+- Agreement report export endpoint (`GET /api/agreement/tasks/{id}/export`) supporting JSON and multi-section CSV formats with summary metrics, Cohen's kappa, disagreement matrix, top disagreement pairs, and boundary diagnostics.
+- Agreement Dashboard export UI buttons for downloading JSON and CSV reports with automatic blob download handling.
+- Full unit test coverage for agreement report export endpoint and frontend export actions.
 
 ### Fixed
 - Unified backend imports on the `app` package (matching the Docker `uvicorn app.main:app` entrypoint). Mixed `backend.app`/`app` imports loaded the security module twice, so the OIDC test's JWKS patch never reached the running app and hosted CI failed.

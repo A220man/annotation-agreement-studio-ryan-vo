@@ -73,22 +73,23 @@ export const TaskCoordinator: React.FC<TaskCoordinatorProps> = ({ selectedTaskId
 
       const docs = await api.tasks.listDocuments(spanTask.id);
       if (docs.length >= 2) {
+        const ms = (arr: [number, number, string, string][]) => arr.map(([start, end, label, text]) => ({ start, end, label, text }));
         await api.annotations.batchImport(spanTask.id, [
           {
             document_id: docs[0].id, annotator_id: 'annotator_1', annotator_name: 'Elena Rostova', task_type: 'span',
-            spans: [{ start: 0, end: 8, label: 'ORG', text: 'Alphabet' }, { start: 43, end: 54, label: 'ORG', text: 'Wall Street' }, { start: 68, end: 75, label: 'DATE', text: 'Tuesday' }],
+            spans: ms([[0, 8, 'ORG', 'Alphabet'], [43, 54, 'ORG', 'Wall Street'], [68, 75, 'DATE', 'Tuesday']]),
           },
           {
             document_id: docs[0].id, annotator_id: 'annotator_2', annotator_name: 'Marcus Chen', task_type: 'span',
-            spans: [{ start: 0, end: 8, label: 'ORG', text: 'Alphabet' }, { start: 43, end: 55, label: 'ORG', text: 'Wall Street ' }, { start: 68, end: 75, label: 'DATE', text: 'Tuesday' }],
+            spans: ms([[0, 8, 'ORG', 'Alphabet'], [43, 55, 'ORG', 'Wall Street '], [68, 75, 'DATE', 'Tuesday']]),
           },
           {
             document_id: docs[1].id, annotator_id: 'annotator_1', annotator_name: 'Elena Rostova', task_type: 'span',
-            spans: [{ start: 4, end: 13, label: 'PER', text: 'Sarah Lin' }, { start: 25, end: 36, label: 'MED', text: 'amoxicillin' }, { start: 37, end: 42, label: 'DOSAGE', text: '500mg' }],
+            spans: ms([[4, 13, 'PER', 'Sarah Lin'], [25, 36, 'MED', 'amoxicillin'], [37, 42, 'DOSAGE', '500mg']]),
           },
           {
             document_id: docs[1].id, annotator_id: 'annotator_2', annotator_name: 'Marcus Chen', task_type: 'span',
-            spans: [{ start: 0, end: 13, label: 'PER', text: 'Dr. Sarah Lin' }, { start: 25, end: 36, label: 'MED', text: 'amoxicillin' }, { start: 37, end: 42, label: 'DOSAGE', text: '500mg' }],
+            spans: ms([[0, 13, 'PER', 'Dr. Sarah Lin'], [25, 36, 'MED', 'amoxicillin'], [37, 42, 'DOSAGE', '500mg']]),
           },
         ]);
       }
