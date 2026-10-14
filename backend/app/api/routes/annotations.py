@@ -113,18 +113,106 @@ def batch_import_annotations(
     db: Session = Depends(get_db),
     user: AuthenticatedUser = Depends(require_role("analyst")),
 ):
-    ids = []
-    for item in payload.annotations:
+    """Batch import annotations with validation of span boundaries against document text."""
+    errors: List[Dict[str, Any]] = []
+    valid_annotations: List[Dict[str, Any]] = []
+
+    for idx, item in enumerate(payload.annotations):
+        doc = db.query(Document).filter(Document.id == item.document_id).first()
+        if not doc:
+            errors.append({
+                "index": idx,
+                "document_id": item.document_id,
+                "error": "Document not found",
+                "details": f"No document exists with ID {item.document_id}"
+            })
+            continue
+
+        if doc.task_id != payload.task_id:
+            errors.append({
+                "index": idx,
+                "document_id": item.document_id,
+                "error": "Task mismatch",
+                "details": f"Document {item.document_id} belongs to task {doc.task_id}, not {payload.task_id}"
+            })
+            continue
+
         spans_data = [s.model_dump() for s in (item.spans or [])]
+        span_errors: List[Dict[str, Any]] = []
+
+        for s_idx, s in enumerate(spans_data):
+            if s["start"] >= s["end"]:
+                span_errors.append({
+                    "span_index": s_idx,
+                    "error": "Invalid span range",
+                    "details": f"Span start ({s['start']}) must be less than end ({s['end']})"
+                })
+            elif s["end"] > len(doc.text):
+                span_errors.append({
+                    "span_index": s_idx,
+                    "error": "Span exceeds document length",
+                    "details": f"Span end ({s['end']}) exceeds document text length ({len(doc.text)})"
+                })
+            elif s["start"] < 0:
+                span_errors.append({
+                    "span_index": s_idx,
+                    "error": "Negative span start",
+                    "details": f"Span start ({s['start']}) cannot be negative"
+                })
+
+        if span_errors:
+            errors.append({
+                "index": idx,
+                "document_id": item.document_id,
+                "error": "Span validation failed",
+                "details": span_errors
+            })
+            continue
+
+        # Auto-populate span text from document if not provided
+        for s in spans_data:
+            if not s.get("text"):
+                s["text"] = doc.text[s["start"]:s["end"]]
+
+        valid_annotations.append({
+            "item": item,
+            "spans_data": spans_data,
+            "doc": doc
+        })
+
+    if errors:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={
+                "message": "Batch import validation failed",
+                "imported": 0,
+                "failed": len(errors),
+                "errors": errors
+            }
+        )
+
+    ids = []
+    for va in valid_annotations:
+        item = va["item"]
+        spans_data = va["spans_data"]
         ann = Annotation(
-            id=str(uuid.uuid4()), document_id=item.document_id, task_id=payload.task_id, annotator_id=item.annotator_id,
-            annotator_name=item.annotator_name, task_type=item.task_type, class_label=item.class_label,
-            spans_json=json.dumps(spans_data), notes=item.notes, created_at=utc_now(), updated_at=utc_now(),
+            id=str(uuid.uuid4()),
+            document_id=item.document_id,
+            task_id=payload.task_id,
+            annotator_id=item.annotator_id,
+            annotator_name=item.annotator_name,
+            task_type=item.task_type,
+            class_label=item.class_label,
+            spans_json=json.dumps(spans_data),
+            notes=item.notes,
+            created_at=utc_now(),
+            updated_at=utc_now(),
         )
         db.add(ann)
         ids.append(ann.id)
+
     db.commit()
-    record_audit(db, "BATCH_ANNOTATIONS_IMPORTED", user, "Task", payload.task_id, {"count": len(ids)})
+    record_audit(db, "BATCH_ANNOTATIONS_IMPORTED", user, "Task", payload.task_id, {"count": len(ids), "validated": True})
     return {"status": "imported", "count": len(ids)}
 
 @router.delete("/{annotation_id}")

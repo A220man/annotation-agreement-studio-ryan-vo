@@ -4,7 +4,7 @@ Each round completes one feature or repair. Future items are planned, not implem
 
 ## Current round
 
-agreement-report-export
+annotation-import-validation
 
 ## Roadmap
 
@@ -25,9 +25,13 @@ Tests: `backend/tests/test_agreement_export.py`, `frontend/src/components/Agreem
 
 ### annotation-import-validation — Annotation Batch Import Validation
 
-Status: planned
+Status: done
 
 Acceptance:
 - Validates span boundaries within document text lengths on batch import
 - Rejects malformed span inputs with detailed error feedback
+
+Implementation: `backend/app/api/routes/annotations.py`, `backend/tests/test_batch_import_validation.py`
+
+Tests: `backend/tests/test_batch_import_validation.py`
 
