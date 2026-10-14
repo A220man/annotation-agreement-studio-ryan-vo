@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "current_feature": "agreement-report-export",
+  "current_feature": "annotation-import-validation",
   "features": [
     {
       "id": "agreement-report-export",
@@ -27,13 +27,18 @@
     {
       "id": "annotation-import-validation",
       "title": "Annotation Batch Import Validation",
-      "status": "planned",
+      "status": "done",
       "acceptance": [
         "Validates span boundaries within document text lengths on batch import",
         "Rejects malformed span inputs with detailed error feedback"
       ],
-      "implementation": [],
-      "tests": []
+      "implementation": [
+        "backend/app/api/routes/annotations.py",
+        "backend/tests/test_batch_import_validation.py"
+      ],
+      "tests": [
+        "backend/tests/test_batch_import_validation.py"
+      ]
     }
   ]
 }

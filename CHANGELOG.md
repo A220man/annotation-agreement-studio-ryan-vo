@@ -1,19 +1,12 @@
 # Changelog
 
-## 1.2.0 — work-in-progress checkpoint
+## 1.3.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
 
-## 1.1.1
+## 1.2.0 — work-in-progress checkpoint
 
-- Fix backend Docker builds in CI and Compose by including the root VERSION file in a restricted repository-root build context.
-
-## [1.1.0] - 2026-10-09
-
-All notable changes to Annotation Agreement Studio will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Partial code published for continued development. Known issues: STATUS.md.
 
 ## [Unreleased]
 
@@ -21,6 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Agreement report export endpoint (`GET /api/agreement/tasks/{id}/export`) supporting JSON and multi-section CSV formats with summary metrics, Cohen's kappa, disagreement matrix, top disagreement pairs, and boundary diagnostics.
 - Agreement Dashboard export UI buttons for downloading JSON and CSV reports with automatic blob download handling.
 - Full unit test coverage for agreement report export endpoint and frontend export actions.
+- **Annotation batch import validation** (`POST /api/annotations/batch`) with comprehensive span boundary checks against document text lengths, task-document consistency verification, and detailed per-span error reporting.
+
+### Fixed
+- Unified backend imports on the `app` package (matching the Docker `uvicorn app.main:app` entrypoint). Mixed `backend.app`/`app` imports loaded the security module twice, so the OIDC test's JWKS patch never reached the running app and hosted CI failed.
+- README run and benchmark commands now use the same entrypoint.
+
+## [1.1.1] - 2026-10-09
+
+- Fix backend Docker builds in CI and Compose by including the root VERSION file in a restricted repository-root build context.
 
 ### Fixed
 - Unified backend imports on the `app` package (matching the Docker `uvicorn app.main:app` entrypoint). Mixed `backend.app`/`app` imports loaded the security module twice, so the OIDC test's JWKS patch never reached the running app and hosted CI failed.
