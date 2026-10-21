@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.0 — work-in-progress checkpoint
+
+Partial code published for continued development. Known issues: STATUS.md.
+
 ## 1.3.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
@@ -8,9 +12,12 @@ Partial code published for continued development. Known issues: STATUS.md.
 
 Partial code published for continued development. Known issues: STATUS.md.
 
-## [Unreleased]
-
 ### Added
+- HuggingFace dataset export format (`GET /api/reconciliation/export/{task_id}?format=huggingface`) with proper Content-Disposition headers for JSONL, CoNLL, and HuggingFace formats.
+- Reconciliation Queue UI adds HuggingFace export button for span annotation tasks.
+- Full unit test coverage for HuggingFace export endpoint (RBAC, auth, format validation) and frontend export links.
+- Content-Disposition download headers added to all reconciliation export formats (JSONL, CoNLL, HuggingFace).
+
 - Agreement report export endpoint (`GET /api/agreement/tasks/{id}/export`) supporting JSON and multi-section CSV formats with summary metrics, Cohen's kappa, disagreement matrix, top disagreement pairs, and boundary diagnostics.
 - Agreement Dashboard export UI buttons for downloading JSON and CSV reports with automatic blob download handling.
 - Full unit test coverage for agreement report export endpoint and frontend export actions.

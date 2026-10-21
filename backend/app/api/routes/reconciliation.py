@@ -175,7 +175,9 @@ def export_gold_dataset(
         })
 
     if format == "jsonl":
-        return Response(content=export_to_jsonl(export_records), media_type="application/x-ndjson")
+        return Response(content=export_to_jsonl(export_records), media_type="application/x-ndjson", headers={"Content-Disposition": f'attachment; filename="gold-{task_id}.jsonl"'})
     elif format == "conll":
-        return Response(content=export_to_conll(export_records), media_type="text/plain")
-    return {"dataset": export_to_huggingface(export_records), "task_id": task_id}
+        return Response(content=export_to_conll(export_records), media_type="text/plain", headers={"Content-Disposition": f'attachment; filename="gold-{task_id}.conll"'})
+    elif format == "huggingface":
+        hf_dataset = export_to_huggingface(export_records)
+        return Response(content=json.dumps(hf_dataset), media_type="application/json", headers={"Content-Disposition": f'attachment; filename="gold-{task_id}.hf.json"'})
