@@ -93,6 +93,11 @@ export const ReconciliationQueue: React.FC<{ task: Task | null }> = ({ task }) =
               <Download size={15} /> CoNLL
             </a>
           )}
+          {task.task_type === 'span' && (
+            <a href={`/api/reconciliation/export/${task.id}?format=huggingface`} download className="btn btn-outline" style={{ textDecoration: 'none' }}>
+              <Download size={15} /> HuggingFace
+            </a>
+          )}
         </div>
       </div>
 
