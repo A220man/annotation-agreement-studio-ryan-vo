@@ -33,13 +33,13 @@ export const ReconciliationQueue: React.FC<{ task: Task | null }> = ({ task }) =
 
   useEffect(() => { refreshData(); }, [task]);
 
-  if (!task) return <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Select a task to open the adjudication queue.</div>;
+  if (!task) return <div className="empty-state">Select a task to open the adjudication queue.</div>;
 
   const handleAutoReconcile = async () => {
     setReconciling(true);
     try {
-      await api.reconciliation.autoReconcile(task.id, strategy);
-      await refreshData();
+      await api.reconciliation.autoReconcile(task.id, { strategy });
+      refreshData();
     } finally {
       setReconciling(false);
     }
@@ -48,12 +48,9 @@ export const ReconciliationQueue: React.FC<{ task: Task | null }> = ({ task }) =
   const handleSaveConsensus = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editDoc) return;
-    await api.reconciliation.manualConsensus(editDoc.id, {
-      status: 'approved',
-      class_label: task.task_type === 'classification' ? manualLabel : undefined,
-      reconciliation_method: 'manual',
-      notes: manualNotes,
-    });
+    const payload: any = { reconciled_by: 'analyst', notes: manualNotes };
+    if (task.task_type === 'classification') payload.class_label = manualLabel;
+    await api.reconciliation.manualConsensus(editDoc.id, payload);
     setEditDoc(null);
     refreshData();
   };
@@ -61,118 +58,81 @@ export const ReconciliationQueue: React.FC<{ task: Task | null }> = ({ task }) =
   const consensusMap = new Map(consensusList.map((c) => [c.document_id, c]));
 
   return (
-    <div style={{ maxWidth: '1280px', margin: '1.5rem auto', padding: '0 1.5rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+    <div className="page-container">
+      <div className="page-header">
         <div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '700' }}>Adjudication Queue: {task.name}</h2>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Resolve disputes and export consensus datasets.</p>
+          <h2 className="page-title">Consensus Adjudication Queue</h2>
+          <p className="page-subtitle">Task: {task.name} ({task.task_type})</p>
         </div>
-
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          {role !== 'viewer' && (
-            <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-              <select value={strategy} onChange={(e) => setStrategy(e.target.value)}>
-                <option value="majority_vote">Majority Vote</option>
-                {task.task_type === 'span' && (
-                  <>
-                    <option value="union">Span Union</option>
-                    <option value="intersection">Span Intersection</option>
-                  </>
-                )}
-              </select>
-              <button onClick={handleAutoReconcile} disabled={reconciling} className="btn btn-primary">
-                <Sliders size={15} /> {reconciling ? 'Running...' : 'Auto-Reconcile'}
-              </button>
-            </div>
-          )}
-          <a href={`/api/reconciliation/export/${task.id}?format=jsonl`} download className="btn btn-outline" style={{ textDecoration: 'none' }}>
-            <Download size={15} /> JSONL
-          </a>
-          {task.task_type === 'span' && (
-            <a href={`/api/reconciliation/export/${task.id}?format=conll`} download className="btn btn-outline" style={{ textDecoration: 'none' }}>
-              <Download size={15} /> CoNLL
-            </a>
-          )}
-          {task.task_type === 'span' && (
-            <a href={`/api/reconciliation/export/${task.id}?format=huggingface`} download className="btn btn-outline" style={{ textDecoration: 'none' }}>
-              <Download size={15} /> HuggingFace
-            </a>
-          )}
-        </div>
+        {(role === 'analyst' || role === 'admin') && (
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <select value={strategy} onChange={(e) => setStrategy(e.target.value)} className="form-input" style={{ width: 'auto', minWidth: '180px' }}>
+              <option value="majority_vote">Majority Vote</option>
+              <option value="union">Span Union (Max Recall)</option>
+              <option value="intersection">Span Intersection (Max Precision)</option>
+            </select>
+            <button onClick={handleAutoReconcile} disabled={reconciling} className="btn btn-primary">
+              <Sliders size={15} /> {reconciling ? 'Reconciling...' : 'Auto-Reconcile'}
+            </button>
+            <button onClick={() => api.reconciliation.exportGold(task.id, 'jsonl')} className="btn btn-outline"><Download size={15} /> Export JSONL</button>
+            <button onClick={() => api.reconciliation.exportGold(task.id, 'conll')} className="btn btn-outline"><Download size={15} /> Export CoNLL</button>
+            <button onClick={() => api.reconciliation.exportGold(task.id, 'hf')} className="btn btn-outline"><Download size={15} /> Export HF</button>
+          </div>
+        )}
       </div>
 
-      {loading ? <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Loading records...</div> : documents.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>No documents in this task.</div>
+      {loading ? <div className="loading-state">Loading adjudication queue...</div> : documents.length === 0 ? (
+        <div className="card empty-state">No documents in this task.</div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          {documents.map((doc, idx) => {
+        <div className="recon-queue">
+          {documents.map((doc) => {
             const consensus = consensusMap.get(doc.id);
             return (
-              <div key={doc.id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
-                <div style={{ flex: 1, minWidth: '260px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>#{idx + 1}</span>
-                    {consensus ? (
-                      <span className={`badge ${consensus.status === 'approved' ? 'badge-success' : 'badge-warning'}`}>
-                        {consensus.status.toUpperCase()} ({consensus.reconciliation_method})
-                      </span>
-                    ) : (
-                      <span className="badge badge-danger">PENDING</span>
-                    )}
-                  </div>
-                  <p style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>{doc.text}</p>
+              <div key={doc.id} className="recon-doc">
+                <div className="recon-doc-header">
+                  <span className="recon-doc-id">{doc.id.substring(0, 8)}... • {doc.text.length} chars</span>
+                  <span className={`recon-status ${consensus?.status === 'approved' ? 'recon-status-approved' : 'recon-status-draft'}`}>
+                    {consensus?.status || 'Pending'}
+                  </span>
+                </div>
+                <div className="recon-doc-body">
+                  <div className="recon-text-preview">{doc.text}</div>
                   {consensus && (
-                    <div style={{ background: 'var(--bg-subtle)', padding: '0.5rem 0.75rem', borderRadius: '0.375rem', fontSize: '0.8rem', border: '1px solid var(--border)' }}>
-                      {consensus.class_label && <div><strong>Gold Label:</strong> <span style={{ color: 'var(--success)' }}>{consensus.class_label}</span></div>}
-                      {consensus.spans && consensus.spans.length > 0 && (
-                        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.2rem' }}>
-                          <strong>Gold Spans:</strong>
-                          {consensus.spans.map((s, sidx) => (
-                            <span key={sidx} style={{ padding: '0.1rem 0.35rem', borderRadius: '0.25rem', background: 'rgba(52,211,153,0.15)', color: 'var(--success)' }}>
-                              {s.label}: "{s.text}" [{s.start}:{s.end}]
-                            </span>
-                          ))}
+                    <>
+                      <div className="recon-spans">
+                        {JSON.parse(consensus.spans_json || '[]').map((s: any, i: number) => (
+                          <span key={i} className="recon-span">[{s.start}:{s.end}] {s.label} ({s.confidence * 100}%)</span>
+                        ))}
+                      </div>
+                      <div className="recon-method">Method: {consensus.reconciliation_method}</div>
+                    </>
+                  )}
+                  {(role === 'analyst' || role === 'admin') && !consensus && (
+                    <form onSubmit={handleSaveConsensus} className="recon-form">
+                      <h4 style={{ marginBottom: '0.5rem' }}>Manual Consensus</h4>
+                      {task.task_type === 'classification' ? (
+                        <div className="form-group">
+                          <label className="form-label">Class Label</label>
+                          <select value={manualLabel} onChange={(e) => setManualLabel(e.target.value)} className="form-input" required>
+                            {JSON.parse(task.labels_schema || '[]').map((l: string) => <option key={l} value={l}>{l}</option>)}
+                          </select>
                         </div>
+                      ) : (
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Use API for manual span consensus.</p>
                       )}
-                      {consensus.notes && <div style={{ color: 'var(--text-muted)', marginTop: '0.2rem' }}><em>Notes:</em> {consensus.notes}</div>}
-                    </div>
+                      <div className="form-group">
+                        <label className="form-label">Adjudication Notes</label>
+                        <textarea value={manualNotes} onChange={(e) => setManualNotes(e.target.value)} className="form-input form-textarea" placeholder="Explain your decision..." />
+                      </div>
+                      <div className="modal-actions">
+                        <button type="submit" className="btn btn-primary"><Edit3 size={15} /> Save Consensus</button>
+                      </div>
+                    </form>
                   )}
                 </div>
-                {role !== 'viewer' && (
-                  <button onClick={() => { setEditDoc(doc); setManualLabel(consensus?.class_label || task.labels_schema[0] || ''); setManualNotes(consensus?.notes || ''); }} className="btn btn-secondary" style={{ fontSize: '0.8rem' }}>
-                    <Edit3 size={13} /> Adjudicate
-                  </button>
-                )}
               </div>
             );
           })}
-        </div>
-      )}
-
-      {editDoc && (
-        <div className="modal-overlay">
-          <div className="modal-box">
-            <h3 style={{ marginBottom: '0.5rem' }}>Adjudication Override</h3>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>"{editDoc.text}"</p>
-            <form onSubmit={handleSaveConsensus}>
-              {task.task_type === 'classification' && (
-                <div style={{ marginBottom: '0.75rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Label</label>
-                  <select style={{ width: '100%' }} value={manualLabel} onChange={(e) => setManualLabel(e.target.value)}>
-                    {task.labels_schema.map((l) => <option key={l} value={l}>{l}</option>)}
-                  </select>
-                </div>
-              )}
-              <div style={{ marginBottom: '0.75rem' }}>
-                <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Rationale / Audit Notes</label>
-                <textarea rows={3} style={{ width: '100%' }} value={manualNotes} onChange={(e) => setManualNotes(e.target.value)} />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                <button type="button" onClick={() => setEditDoc(null)} className="btn btn-secondary">Cancel</button>
-                <button type="submit" className="btn btn-primary">Approve Consensus</button>
-              </div>
-            </form>
-          </div>
         </div>
       )}
     </div>

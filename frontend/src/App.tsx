@@ -43,7 +43,7 @@ export const MainContent: React.FC = () => {
         )}
       </main>
 
-      <footer style={{ borderTop: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)', padding: '1rem 1.5rem', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+      <footer style={{ borderTop: '1px solid var(--border)', background: 'var(--bg-card)', padding: '1rem 1.5rem', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
         Annotation Agreement Studio &bull; Developed by <strong>Ryan Vo</strong> (&lt;ryandtvo@gmail.com&gt;) &bull; NLP Agreement &amp; Adjudication Engine
       </footer>
     </div>

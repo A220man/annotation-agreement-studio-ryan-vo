@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Task, AgreementSummary } from '../types/api';
 import { api } from '../api/client';
-import { Split, UserX, Download } from 'lucide-react';
+import { Download } from 'lucide-react';
 
 export const AgreementDashboard: React.FC<{ task: Task | null }> = ({ task }) => {
   const [summary, setSummary] = useState<AgreementSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'confusion' | 'disagreement' | 'diagnostics'>('overview');
 
   useEffect(() => {
     if (!task) return;
@@ -31,119 +32,121 @@ export const AgreementDashboard: React.FC<{ task: Task | null }> = ({ task }) =>
     }
   };
 
-  if (!task) return <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Select a task to view metrics.</div>;
+  if (!task) return <div className="empty-state">Select a task to view metrics.</div>;
 
   return (
-    <div style={{ maxWidth: '1280px', margin: '1.5rem auto', padding: '0 1.5rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+    <div className="page-container">
+      <div className="page-header">
         <div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.25rem' }}>Agreement: {task.name}</h2>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Cohen/Fleiss kappa, confusion matrix, and span boundary diagnostics.</p>
+          <h2 className="page-title">Inter-Annotator Agreement</h2>
+          <p className="page-subtitle">Task: {task.name} ({task.task_type})</p>
         </div>
-        {summary && summary.cohen_kappas.length > 0 && (
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <button onClick={() => handleExport('json')} disabled={exporting} className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
-              <Download size={14} /> Export JSON
-            </button>
-            <button onClick={() => handleExport('csv')} disabled={exporting} className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
-              <Download size={14} /> Export CSV
-            </button>
-          </div>
-        )}
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button onClick={() => handleExport('json')} disabled={exporting} className="btn btn-outline"><Download size={15} /> Export JSON</button>
+          <button onClick={() => handleExport('csv')} disabled={exporting} className="btn btn-outline"><Download size={15} /> Export CSV</button>
+        </div>
       </div>
 
-      {loading ? <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Calculating metrics...</div> : error ? (
-        <div style={{ padding: '1rem', color: 'var(--danger)', background: 'rgba(248,113,113,0.1)', borderRadius: '0.375rem' }}>{error}</div>
+      {loading ? <div className="loading-state">Calculating metrics...</div> : error ? (
+        <div className="error-state">{error}</div>
       ) : !summary || summary.cohen_kappas.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
-          <Split size={36} color="var(--text-muted)" style={{ marginBottom: '0.5rem' }} />
-          <h3>Insufficient Annotations</h3>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Need at least 2 annotators on overlapping items.</p>
+        <div className="card empty-state">
+          <p>Insufficient annotations for agreement calculation.</p>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+            Need at least 2 annotators with overlapping documents.
+          </p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          {summary.outlier_annotators.length > 0 && (
-            <div style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid var(--warning)', padding: '0.75rem', borderRadius: '0.375rem', display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.85rem' }}>
-              <UserX color="var(--warning)" size={18} />
-              <span><strong>Outlier Annotators:</strong> [{summary.outlier_annotators.join(', ')}] deviate from group mean agreement.</span>
-            </div>
+          <div className="agreement-tabs">
+            {(['overview', 'confusion', 'disagreement', 'diagnostics'] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setActiveTab(t)}
+                className={`agreement-tab ${activeTab === t ? 'agreement-tab-active' : ''}`}
+              >
+                {t.charAt(0).toUpperCase() + t.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {activeTab === 'overview' && (
+            <>
+              <div className="metrics-grid">
+                <div className="metric-card">
+                  <div className="metric-label">MEAN COHEN KAPPA</div>
+                  <div className="metric-value metric-primary">{summary.overall_mean_kappa.toFixed(4)}</div>
+                  <div className="metric-label" style={{ color: 'var(--primary)' }}>
+                    {summary.cohen_kappas.length > 0 ? summary.cohen_kappas[0].interpretation : 'N/A'}
+                  </div>
+                </div>
+                <div className="metric-card">
+                  <div className="metric-label">FLEISS KAPPA</div>
+                  <div className="metric-value metric-accent">{summary.fleiss_kappa !== undefined ? summary.fleiss_kappa.toFixed(4) : 'N/A'}</div>
+                  <div className="metric-label" style={{ color: 'var(--accent)' }}>Need 3+ annotators</div>
+                </div>
+                <div className="metric-card">
+                  <div className="metric-label">KRIPPENDORFF ALPHA</div>
+                  <div className="metric-value metric-success">{summary.krippendorff_alpha !== undefined ? summary.krippendorff_alpha.toFixed(4) : 'N/A'}</div>
+                  <div className="metric-label" style={{ color: 'var(--success)' }}>Need nominal data</div>
+                </div>
+                <div className="metric-card">
+                  <div className="metric-label">AVG SPAN OVERLAP F1</div>
+                  <div className="metric-value metric-success">{(summary.token_span_f1 !== undefined ? summary.token_span_f1 * 100 : 0).toFixed(1)}%</div>
+                </div>
+              </div>
+
+              <div className="card">
+                <h3 className="card-title">Pairwise Cohen's Kappa</h3>
+                <div className="table-container">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Annotator 1</th><th>Annotator 2</th><th>Kappa</th><th>Observed</th><th>Expected</th><th>Interpretation</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {summary.cohen_kappas.map((k, i) => (
+                        <tr key={i}>
+                          <td>{k.annotator_1}</td><td>{k.annotator_2}</td><td>{k.kappa.toFixed(4)}</td><td>{k.observed_agreement.toFixed(4)}</td><td>{k.expected_agreement.toFixed(4)}</td><td>{k.interpretation}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {summary.outlier_annotators && summary.outlier_annotators.length > 0 && (
+                <div className="card">
+                  <h3 className="card-title">Outlier Annotators</h3>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                    Annotators with mean pairwise kappa below 0.4: <strong>{summary.outlier_annotators.join(', ')}</strong>
+                  </p>
+                </div>
+              )}
+            </>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+          {activeTab === 'confusion' && summary.disagreement_matrix && (
             <div className="card">
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>MEAN COHEN KAPPA</div>
-              <div style={{ fontSize: '1.75rem', fontWeight: '700', color: summary.overall_mean_kappa >= 0.7 ? 'var(--success)' : 'var(--warning)' }}>{summary.overall_mean_kappa.toFixed(3)}</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{summary.cohen_kappas.length} pairs</div>
-            </div>
-            {summary.fleiss_kappa != null && (
-              <div className="card">
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>FLEISS KAPPA</div>
-                <div style={{ fontSize: '1.75rem', fontWeight: '700', color: summary.fleiss_kappa >= 0.7 ? 'var(--success)' : 'var(--warning)' }}>{summary.fleiss_kappa.toFixed(3)}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Multi-rater</div>
-              </div>
-            )}
-            {summary.krippendorff_alpha != null && (
-              <div className="card">
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>KRIPPENDORFF ALPHA</div>
-                <div style={{ fontSize: '1.75rem', fontWeight: '700', color: 'var(--accent)' }}>{summary.krippendorff_alpha.toFixed(3)}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Nominal coincidence</div>
-              </div>
-            )}
-            {summary.token_span_f1 != null && (
-              <div className="card">
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>SPAN OVERLAP F1</div>
-                <div style={{ fontSize: '1.75rem', fontWeight: '700', color: 'var(--primary)' }}>{(summary.token_span_f1 * 100).toFixed(1)}%</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Relaxed match</div>
-              </div>
-            )}
-            {summary.span_exact_match_ratio != null && (
-              <div className="card">
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>EXACT MATCH RATIO</div>
-                <div style={{ fontSize: '1.75rem', fontWeight: '700', color: 'var(--success)' }}>{(summary.span_exact_match_ratio * 100).toFixed(1)}%</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Identical offsets</div>
-              </div>
-            )}
-          </div>
-
-          <div className="card">
-            <h3 style={{ fontSize: '0.95rem', marginBottom: '0.75rem' }}>Pairwise Cohen Kappa</h3>
-            <div style={{ overflowX: 'auto' }}>
-              <table>
-                <thead>
-                  <tr><th>Annotator 1</th><th>Annotator 2</th><th>Kappa</th><th>Observed</th><th>Expected</th><th>Interpretation</th></tr>
-                </thead>
-                <tbody>
-                  {summary.cohen_kappas.map((p, idx) => (
-                    <tr key={idx}>
-                      <td style={{ fontWeight: '500' }}>{p.annotator_1}</td>
-                      <td style={{ fontWeight: '500' }}>{p.annotator_2}</td>
-                      <td style={{ fontWeight: '700', color: p.cohen_kappa >= 0.7 ? 'var(--success)' : 'var(--warning)' }}>{p.cohen_kappa.toFixed(3)}</td>
-                      <td>{(p.observed_agreement * 100).toFixed(1)}%</td>
-                      <td>{(p.expected_agreement * 100).toFixed(1)}%</td>
-                      <td><span className={`badge ${p.cohen_kappa >= 0.7 ? 'badge-success' : 'badge-warning'}`}>{p.interpretation}</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {Object.keys(summary.disagreement_matrix).length > 0 && (
-            <div className="card">
-              <h3 style={{ fontSize: '0.95rem', marginBottom: '0.75rem' }}>Confusion Matrix</h3>
+              <h3 className="card-title">Confusion Matrix</h3>
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ textAlign: 'center' }}>
+                <table className="confusion-matrix">
                   <thead>
-                    <tr><th style={{ background: 'var(--bg-subtle)' }}>Labels</th>{Object.keys(summary.disagreement_matrix).map((c) => <th key={c} style={{ background: 'var(--bg-subtle)' }}>{c}</th>)}</tr>
+                    <tr>
+                      <th></th>
+                      {Object.keys(summary.disagreement_matrix).map(l => <th key={l} className="confusion-header">{l}</th>)}
+                    </tr>
                   </thead>
                   <tbody>
-                    {Object.keys(summary.disagreement_matrix).map((row) => (
-                      <tr key={row}>
-                        <td style={{ fontWeight: '600', background: 'var(--bg-subtle)' }}>{row}</td>
-                        {Object.keys(summary.disagreement_matrix).map((col) => {
-                          const val = summary.disagreement_matrix[row]?.[col] || 0;
-                          return <td key={col} style={{ color: row === col ? 'var(--success)' : val > 0 ? 'var(--danger)' : 'var(--text-muted)', fontWeight: val > 0 ? '600' : '400' }}>{val}</td>;
-                        })}
+                    {Object.entries(summary.disagreement_matrix).map(([rowLabel, rowData], i) => (
+                      <tr key={rowLabel}>
+                        <td className="confusion-header">{rowLabel}</td>
+                        {Object.entries(rowData).map(([colLabel, value], j) => (
+                          <td key={colLabel} className={i === j ? 'confusion-diagonal' : value > 0.3 ? 'confusion-high' : value > 0.1 ? 'confusion-medium' : ''}>
+                            {value.toFixed(2)}
+                          </td>
+                        ))}
                       </tr>
                     ))}
                   </tbody>
@@ -152,18 +155,45 @@ export const AgreementDashboard: React.FC<{ task: Task | null }> = ({ task }) =>
             </div>
           )}
 
-          {summary.boundary_diagnostics.length > 0 && (
+          {activeTab === 'disagreement' && summary.top_disagreements && summary.top_disagreements.length > 0 && (
             <div className="card">
-              <h3 style={{ fontSize: '0.95rem', marginBottom: '0.75rem' }}>Span Boundary Misalignment Diagnostics</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                {summary.boundary_diagnostics.map((b, idx) => (
-                  <div key={idx} style={{ background: 'var(--bg-subtle)', padding: '0.6rem', borderRadius: '0.375rem', border: '1px solid var(--border)', fontSize: '0.8rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span className="badge badge-warning">{b.misalignment_type.toUpperCase()}</span>
-                      <span style={{ color: 'var(--text-muted)' }}>Delta: {b.offset_difference} chars</span>
+              <h3 className="card-title">Top Disagreement Pairs</h3>
+              <div className="disagreement-list">
+                {summary.top_disagreements.map((pair, i) => (
+                  <div key={i} className="disagreement-item">
+                    <div className="disagreement-pair">
+                      <span className="badge badge-primary">{pair.label_1}</span>
+                      <span>vs</span>
+                      <span className="badge badge-warning">{pair.label_2}</span>
                     </div>
-                    <div style={{ marginTop: '0.25rem', color: 'var(--text-muted)' }}>
-                      <span>{b.annotator_1}: "{b.text_1}" [{b.span_1[0]}:{b.span_1[1]}]</span> vs <span>{b.annotator_2}: "{b.text_2}" [{b.span_2[0]}:{b.span_2[1]}]</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <span className="disagreement-count">{pair.count} occurrences</span>
+                      <span className="disagreement-pct">{pair.percentage.toFixed(1)}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'diagnostics' && summary.boundary_diagnostics && summary.boundary_diagnostics.length > 0 && (
+            <div className="card">
+              <h3 className="card-title">Boundary Misalignment Diagnostics</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {summary.boundary_diagnostics.map((diag, i) => (
+                  <div key={i} style={{ background: 'var(--bg-subtle)', padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                      <span className={`diag-badge diag-${diag.diagnostic_type}`}>{diag.diagnostic_type.replace('_', ' ')}</span>
+                      <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Doc: {diag.document_id.substring(0, 8)}...</span>
+                    </div>
+                    <div style={{ fontSize: '0.85rem' }}>
+                      <strong>Annotator 1 ({diag.annotator_1}):</strong> [{diag.span_1_start}, {diag.span_1_end}] "{diag.span_1_text}"
+                    </div>
+                    <div style={{ fontSize: '0.85rem' }}>
+                      <strong>Annotator 2 ({diag.annotator_2}):</strong> [{diag.span_2_start}, {diag.span_2_end}] "{diag.span_2_text}"
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                      Offset difference: {diag.offset_difference} chars
                     </div>
                   </div>
                 ))}
