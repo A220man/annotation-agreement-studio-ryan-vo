@@ -9,7 +9,6 @@ export const AnnotationWorkbench: React.FC<{ task: Task | null }> = ({ task }) =
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
-  const [loading, setLoading] = useState(false);
 
   const [annotatorName, setAnnotatorName] = useState('Analyst-1');
   const [classLabel, setClassLabel] = useState('');
@@ -26,166 +25,166 @@ export const AnnotationWorkbench: React.FC<{ task: Task | null }> = ({ task }) =
     if (!task) return;
     api.tasks.listDocuments(task.id).then((docs) => {
       setDocuments(docs);
-      if (docs.length > 0) setSelectedDocId(docs[0].id);
+      if (docs.length > 0 && !selectedDocId) setSelectedDocId(docs[0].id);
     });
   }, [task]);
 
   useEffect(() => {
     if (!task || !selectedDocId) return;
-    setLoading(true);
-    api.annotations.list(task.id, selectedDocId).then(setAnnotations).finally(() => setLoading(false));
+    api.annotations.list(task.id, selectedDocId).then(setAnnotations);
   }, [task, selectedDocId]);
 
-  if (!task) return <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Select a task to open workbench.</div>;
+  if (!task) return <div className="empty-state">Select a task to open workbench.</div>;
 
   const selectedDoc = documents.find((d) => d.id === selectedDocId);
 
   const handleAddSpan = () => {
-    if (!selectedDoc || spanStart >= spanEnd || spanEnd > selectedDoc.text.length) return;
-    const lbl = spanLabel || (task.labels_schema[0] || 'ENTITY');
-    setActiveSpans([...activeSpans, { start: spanStart, end: spanEnd, label: lbl, text: selectedDoc.text.slice(spanStart, spanEnd) }]);
+    if (!spanLabel || spanStart >= spanEnd) return;
+    const text = selectedDoc?.text.substring(spanStart, spanEnd);
+    setActiveSpans([...activeSpans, { start: spanStart, end: spanEnd, label: spanLabel, text }]);
+    setSpanStart(0);
+    setSpanEnd(5);
+    setSpanLabel('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedDoc) return;
-    await api.annotations.submit({
-      document_id: selectedDoc.id, annotator_id: annotatorName.toLowerCase().replace(/\s+/g, '_'),
-      annotator_name: annotatorName, task_type: task.task_type,
-      class_label: task.task_type === 'classification' ? (classLabel || task.labels_schema[0]) : undefined,
-      spans: task.task_type === 'span' ? activeSpans : undefined,
-    });
-    setAnnotations(await api.annotations.list(task.id, selectedDoc.id));
+    if (!task || !selectedDocId) return;
+    const payload: any = { task_id: task.id, document_id: selectedDocId, annotator_name: annotatorName, task_type: task.task_type };
+    if (task.task_type === 'classification') payload.class_label = classLabel;
+    else payload.spans = activeSpans;
+    await api.annotations.submit(payload);
+    api.annotations.list(task.id, selectedDocId).then(setAnnotations);
     setActiveSpans([]);
+    setClassLabel('');
   };
 
   const handleDiagnose = async () => {
-    if (!selectedDoc) return;
     setAdvisoryLoading(true);
-    setAdvisoryOpen(true);
     try {
-      setAdvisoryResult(await api.advisory.diagnose({ document_id: selectedDoc.id }));
-    } catch (err: any) {
-      setAdvisoryResult({ status: 'error', error_message: err.message });
+      const conflicts = annotations.filter(a => a.annotator_name !== annotatorName);
+      const result = await api.advisory.diagnose({
+        document_text: selectedDoc?.text || '',
+        task_type: task.task_type,
+        conflicting_annotations: conflicts,
+      });
+      setAdvisoryResult(result);
+      setAdvisoryOpen(true);
     } finally {
       setAdvisoryLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: '1280px', margin: '1.5rem auto', padding: '0 1.5rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+    <div className="page-container">
+      <div className="page-header">
         <div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '700' }}>Workbench: {task.name}</h2>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Compare multi-annotator inputs.</p>
+          <h2 className="page-title">Annotation Workbench</h2>
+          <p className="page-subtitle">Task: {task.name} ({task.task_type})</p>
         </div>
-        {annotations.length >= 2 && (
-          <button onClick={handleDiagnose} className="btn btn-outline" style={{ borderColor: 'var(--accent)', color: 'var(--accent)' }}>
-            <BrainCircuit size={16} /> Advisory Diagnosis
-          </button>
-        )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '1.5rem' }}>
-        <div className="card" style={{ height: 'fit-content' }}>
-          <h3 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Documents ({documents.length})</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxHeight: '500px', overflowY: 'auto' }}>
-            {documents.map((d, i) => (
-              <div key={d.id} onClick={() => setSelectedDocId(d.id)} style={{ padding: '0.45rem', borderRadius: '0.375rem', background: selectedDocId === d.id ? 'var(--border)' : 'var(--bg-subtle)', cursor: 'pointer', border: '1px solid var(--border)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)' }}><span>#{i + 1}</span><span>{d.annotation_count} anns</span></div>
-                <p style={{ fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.text}</p>
+      <div className="workbench-grid">
+        <div className="workbench-docs">
+          <div className="workbench-docs-header">
+            <span style={{ fontWeight: 600 }}>Documents</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{documents.length}</span>
+          </div>
+          <div className="workbench-doc-list">
+            {documents.map((doc) => (
+              <div
+                key={doc.id}
+                className={`workbench-doc-item ${selectedDocId === doc.id ? 'workbench-doc-item-active' : ''}`}
+                onClick={() => setSelectedDocId(doc.id)}
+              >
+                <div className="workbench-doc-title">{doc.text.substring(0, 60)}...</div>
+                <div className="workbench-doc-meta">{doc.annotation_count} annotations</div>
               </div>
             ))}
           </div>
         </div>
 
-        <div>
-          {selectedDoc ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div className="card">
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>DOCUMENT TEXT</div>
-                <div style={{ background: 'var(--bg-subtle)', padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid var(--border)' }}>{selectedDoc.text}</div>
+        <div className="workbench-editor">
+          <div className="card">
+            <h3 className="card-title">Document Text</h3>
+            <div className="workbench-text">{selectedDoc?.text || 'No document selected'}</div>
+          </div>
+
+          {role === 'analyst' || role === 'admin' ? (
+            <form onSubmit={handleSubmit} className="workbench-form">
+              <h3 className="card-title">Create Annotation</h3>
+              <div className="form-group">
+                <label className="form-label">Annotator Name</label>
+                <input value={annotatorName} onChange={(e) => setAnnotatorName(e.target.value)} className="form-input" required />
               </div>
 
-              <div className="card">
-                <h4 style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>Annotator Submissions ({annotations.length})</h4>
-                {loading ? <div>Loading...</div> : annotations.length === 0 ? <div style={{ color: 'var(--text-muted)' }}>No annotations.</div> : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {annotations.map((a) => (
-                      <div key={a.id} style={{ background: 'var(--bg-subtle)', padding: '0.6rem', borderRadius: '0.375rem', border: '1px solid var(--border)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
-                          <span style={{ fontSize: '0.85rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><User size={13} color="var(--primary)" />{a.annotator_name}</span>
-                          {a.class_label && <span className="badge badge-success">{a.class_label}</span>}
-                        </div>
-                        {a.spans && a.spans.length > 0 && (
-                          <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
-                            {a.spans.map((s, idx) => (
-                              <span key={idx} style={{ fontSize: '0.75rem', padding: '0.1rem 0.35rem', borderRadius: '0.25rem', background: 'rgba(56,189,248,0.15)', border: '1px solid rgba(56,189,248,0.3)' }}>
-                                <strong>{s.label}</strong>: "{s.text || selectedDoc.text.slice(s.start, s.end)}" [{s.start}:{s.end}]
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
+              {task.task_type === 'classification' ? (
+                <div className="form-group">
+                  <label className="form-label">Class Label</label>
+                  <select value={classLabel} onChange={(e) => setClassLabel(e.target.value)} className="form-input" required>
+                    {task.labels_schema.map((l: string) => <option key={l} value={l}>{l}</option>)}
+                  </select>
+                </div>
+              ) : (
+                <>
+                  <div className="form-group">
+                    <label className="form-label">Add Span</label>
+                    <div className="workbench-span-form">
+                      <input type="number" value={spanStart} onChange={(e) => setSpanStart(Number(e.target.value))} className="form-input workbench-span-input" placeholder="Start" min="0" />
+                      <input type="number" value={spanEnd} onChange={(e) => setSpanEnd(Number(e.target.value))} className="form-input workbench-span-input" placeholder="End" min="1" />
+                      <select value={spanLabel} onChange={(e) => setSpanLabel(e.target.value)} className="form-input workbench-span-input" required>
+                        <option value="">Select label</option>
+                        {task.labels_schema.map((l: string) => <option key={l} value={l}>{l}</option>)}
+                      </select>
+                      <button type="button" onClick={handleAddSpan} className="btn btn-primary" style={{ padding: '0.45rem 0.85rem' }}>Add</button>
+                    </div>
+                  </div>
+                  {activeSpans.length > 0 && (
+                    <div className="workbench-active-spans">
+                      {activeSpans.map((s, i) => (
+                        <span key={i} className="workbench-active-span">
+                          [{s.start}:{s.end}] {s.label} {s.text && `("${s.text}")`}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+
+              <button type="submit" className="btn btn-primary"><User size={15} /> Submit Annotation</button>
+            </form>
+          ) : (
+            <p className="empty-state">View-only mode. Requires analyst or admin role.</p>
+          )}
+
+          {selectedDoc && annotations.length > 1 && (role === 'analyst' || role === 'admin') && (
+            <div className="card">
+              <h3 className="card-title">Advisory LLM Analysis</h3>
+              <button onClick={handleDiagnose} disabled={advisoryLoading} className="btn btn-outline workbench-advisory-btn">
+                <BrainCircuit size={15} /> {advisoryLoading ? 'Analyzing...' : 'Explain Conflicts'}
+              </button>
+            </div>
+          )}
+
+          {advisoryOpen && advisoryResult && (
+            <div className="advisory-panel">
+              <div className="advisory-header">
+                <span className="advisory-title">Advisory Analysis</span>
+                <button onClick={() => setAdvisoryOpen(false)} style={{ background: 'transparent', color: 'var(--text-muted)' }}>✕</button>
+              </div>
+              <div className="advisory-body">
+                <div className="advisory-result">{advisoryResult.analysis || 'No analysis available'}</div>
+                {advisoryResult.guideline_recommendation && (
+                  <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(56,189,248,0.1)', borderRadius: '0.375rem', border: '1px solid var(--primary)' }}>
+                    <strong>Guideline Recommendation:</strong> {advisoryResult.guideline_recommendation}
                   </div>
                 )}
+                <div className="advisory-disclaimer">{advisoryResult.advisory_disclaimer}</div>
               </div>
-
-              {role !== 'viewer' && (
-                <div className="card">
-                  <h4 style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>Submit Annotation</h4>
-                  <form onSubmit={handleSubmit}>
-                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-                      <div><input value={annotatorName} onChange={(e) => setAnnotatorName(e.target.value)} placeholder="Annotator name" /></div>
-                      {task.task_type === 'classification' ? (
-                        <div><select value={classLabel} onChange={(e) => setClassLabel(e.target.value)}>{task.labels_schema.map((l) => <option key={l} value={l}>{l}</option>)}</select></div>
-                      ) : (
-                        <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                          <input type="number" value={spanStart} onChange={(e) => setSpanStart(parseInt(e.target.value) || 0)} style={{ width: '60px' }} placeholder="Start" />
-                          <input type="number" value={spanEnd} onChange={(e) => setSpanEnd(parseInt(e.target.value) || 0)} style={{ width: '60px' }} placeholder="End" />
-                          <select value={spanLabel} onChange={(e) => setSpanLabel(e.target.value)}>{task.labels_schema.map((l) => <option key={l} value={l}>{l}</option>)}</select>
-                          <button type="button" onClick={handleAddSpan} className="btn btn-secondary">+ Span</button>
-                        </div>
-                      )}
-                    </div>
-                    {activeSpans.length > 0 && (
-                      <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-                        {activeSpans.map((s, idx) => <span key={idx} className="badge badge-primary">{s.label}: "{s.text}"</span>)}
-                      </div>
-                    )}
-                    <button type="submit" className="btn btn-primary">Save Annotation</button>
-                  </form>
-                </div>
-              )}
             </div>
-          ) : <div className="card" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>Select an item.</div>}
+          )}
         </div>
       </div>
-
-      {advisoryOpen && (
-        <div className="modal-overlay">
-          <div className="modal-box">
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}><BrainCircuit color="var(--accent)" /> Advisory Dispute Diagnosis</h3>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>{advisoryResult?.advisory_disclaimer || 'Advisory explanation.'}</p>
-            {advisoryLoading ? <div>Analyzing...</div> : advisoryResult?.status === 'success' ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <div style={{ background: 'var(--bg-subtle)', padding: '0.6rem', borderRadius: '0.375rem' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Analysis</div>
-                  <p style={{ fontSize: '0.85rem' }}>{advisoryResult.analysis}</p>
-                </div>
-                {advisoryResult.guideline_recommendation && (
-                  <div style={{ background: 'var(--bg-subtle)', padding: '0.6rem', borderRadius: '0.375rem' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--warning)' }}>Recommendation</div>
-                    <p style={{ fontSize: '0.85rem' }}>{advisoryResult.guideline_recommendation}</p>
-                  </div>
-                )}
-              </div>
-            ) : <div style={{ color: 'var(--danger)' }}>{advisoryResult?.error_message || 'Unavailable'}</div>}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}><button onClick={() => setAdvisoryOpen(false)} className="btn btn-secondary">Close</button></div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
