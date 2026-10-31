@@ -38,7 +38,7 @@ export const AgreementDashboard: React.FC<{ task: Task | null }> = ({ task }) =>
     <div className="page-container">
       <div className="page-header">
         <div>
-          <h2 className="page-title">Inter-Annotator Agreement</h2>
+          <h2 className="page-title">Agreement: {task.name}</h2>
           <p className="page-subtitle">Task: {task.name} ({task.task_type})</p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -108,7 +108,7 @@ export const AgreementDashboard: React.FC<{ task: Task | null }> = ({ task }) =>
                     <tbody>
                       {summary.cohen_kappas.map((k, i) => (
                         <tr key={i}>
-                          <td>{k.annotator_1}</td><td>{k.annotator_2}</td><td>{k.kappa.toFixed(4)}</td><td>{k.observed_agreement.toFixed(4)}</td><td>{k.expected_agreement.toFixed(4)}</td><td>{k.interpretation}</td>
+                          <td>{k.annotator_1}</td><td>{k.annotator_2}</td><td>{Number.isFinite(k.kappa) ? k.kappa.toFixed(4) : "N/A"}</td><td>{Number.isFinite(k.observed_agreement) ? k.observed_agreement.toFixed(4) : "N/A"}</td><td>{Number.isFinite(k.expected_agreement) ? k.expected_agreement.toFixed(4) : "N/A"}</td><td>{k.interpretation}</td>
                         </tr>
                       ))}
                     </tbody>
