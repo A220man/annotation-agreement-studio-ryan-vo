@@ -20,12 +20,14 @@ export const ReconciliationQueue: React.FC<{ task: Task | null }> = ({ task }) =
     if (!task) return;
     setLoading(true);
     try {
-      const [docs, cons] = await Promise.all([
+      const [docs, consensus] = await Promise.all([
         api.tasks.listDocuments(task.id),
         api.reconciliation.listConsensus(task.id),
       ]);
       setDocuments(docs);
-      setConsensusList(cons);
+      setConsensusList(consensus);
+    } catch (err) {
+      console.error('Failed to load reconciliation data:', err);
     } finally {
       setLoading(false);
     }
@@ -38,8 +40,10 @@ export const ReconciliationQueue: React.FC<{ task: Task | null }> = ({ task }) =
   const handleAutoReconcile = async () => {
     setReconciling(true);
     try {
-      await api.reconciliation.autoReconcile(task.id, { strategy });
+      await api.reconciliation.autoReconcile(task.id, strategy);
       refreshData();
+    } catch (err) {
+      console.error('Auto-reconcile failed:', err);
     } finally {
       setReconciling(false);
     }
@@ -48,7 +52,7 @@ export const ReconciliationQueue: React.FC<{ task: Task | null }> = ({ task }) =
   const handleSaveConsensus = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editDoc) return;
-    const payload: any = { reconciled_by: 'analyst', notes: manualNotes };
+    const payload: Record<string, unknown> = { reconciled_by: 'analyst', notes: manualNotes };
     if (task.task_type === 'classification') payload.class_label = manualLabel;
     await api.reconciliation.manualConsensus(editDoc.id, payload);
     setEditDoc(null);
@@ -56,6 +60,8 @@ export const ReconciliationQueue: React.FC<{ task: Task | null }> = ({ task }) =
   };
 
   const consensusMap = new Map(consensusList.map((c) => [c.document_id, c]));
+
+  const isSpanTask = task.task_type === 'span';
 
   return (
     <div className="page-container">
@@ -74,9 +80,9 @@ export const ReconciliationQueue: React.FC<{ task: Task | null }> = ({ task }) =
             <button onClick={handleAutoReconcile} disabled={reconciling} className="btn btn-primary">
               <Sliders size={15} /> {reconciling ? 'Reconciling...' : 'Auto-Reconcile'}
             </button>
-            <button onClick={() => api.reconciliation.exportGold(task.id, 'jsonl')} className="btn btn-outline"><Download size={15} /> Export JSONL</button>
-            <button onClick={() => api.reconciliation.exportGold(task.id, 'conll')} className="btn btn-outline"><Download size={15} /> Export CoNLL</button>
-            <button onClick={() => api.reconciliation.exportGold(task.id, 'hf')} className="btn btn-outline"><Download size={15} /> Export HF</button>
+            <a href={`/api/reconciliation/export/${task.id}?format=jsonl`} className="btn btn-outline" download><Download size={15} /> Export JSONL</a>
+            {isSpanTask && <a href={`/api/reconciliation/export/${task.id}?format=conll`} className="btn btn-outline" download><Download size={15} /> Export CoNLL</a>}
+            {isSpanTask && <a href={`/api/reconciliation/export/${task.id}?format=huggingface`} className="btn btn-outline" download><Download size={15} /> Export HuggingFace</a>}
           </div>
         )}
       </div>
@@ -91,21 +97,25 @@ export const ReconciliationQueue: React.FC<{ task: Task | null }> = ({ task }) =
               <div key={doc.id} className="recon-doc">
                 <div className="recon-doc-header">
                   <span className="recon-doc-id">{doc.id.substring(0, 8)}... • {doc.text.length} chars</span>
-                  <span className={`recon-status ${consensus?.status === 'approved' ? 'recon-status-approved' : 'recon-status-draft'}`}>
-                    {consensus?.status || 'Pending'}
+                  <span className={`recon-status recon-status-${consensus?.status || 'draft'}`}>
+                    {consensus ? 'approved' : 'Pending'}
                   </span>
                 </div>
                 <div className="recon-doc-body">
-                  <div className="recon-text-preview">{doc.text}</div>
                   {consensus && (
-                    <>
-                      <div className="recon-spans">
-                        {JSON.parse(consensus.spans_json || '[]').map((s: any, i: number) => (
-                          <span key={i} className="recon-span">[{s.start}:{s.end}] {s.label} ({s.confidence * 100}%)</span>
-                        ))}
-                      </div>
-                      <div className="recon-method">Method: {consensus.reconciliation_method}</div>
-                    </>
+                    <div className="recon-text-preview">
+                      {task.task_type === 'span' && consensus.spans && consensus.spans.length > 0 ? (
+                        <>
+                          {consensus.spans.map((s, i) => (
+                            <span key={i} className="recon-span" style={{ '--span-color': `hsl(${Math.abs(s.label.split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % 360}, 70%, 50%)` }}>
+                              {s.text} <span className="recon-span-label">{s.label}</span>
+                            </span>
+                          ))}
+                        </>
+                      ) : (
+                        <span>{consensus.class_label || 'No label'}</span>
+                      )}
+                    </div>
                   )}
                   {(role === 'analyst' || role === 'admin') && !consensus && (
                     <form onSubmit={handleSaveConsensus} className="recon-form">
@@ -114,7 +124,7 @@ export const ReconciliationQueue: React.FC<{ task: Task | null }> = ({ task }) =
                         <div className="form-group">
                           <label className="form-label">Class Label</label>
                           <select value={manualLabel} onChange={(e) => setManualLabel(e.target.value)} className="form-input" required>
-                            {JSON.parse(task.labels_schema || '[]').map((l: string) => <option key={l} value={l}>{l}</option>)}
+                            {task.labels_schema.map((l: string) => <option key={l} value={l}>{l}</option>)}
                           </select>
                         </div>
                       ) : (

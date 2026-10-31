@@ -1,8 +1,23 @@
 # Changelog
 
-## 1.5.0 — work-in-progress checkpoint
+## 1.6.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
+
+## 1.5.0 — work-in-progress checkpoint
+
+Fixed frontend test failures and resolved known issues:
+
+### Fixed
+- **ReconciliationQueue export links**: Export buttons now use proper `<a>` tags with `href` attributes for JSONL, CoNLL, and HuggingFace formats. CoNLL and HuggingFace exports only shown for span tasks (not classification).
+- **ReconciliationQueue labels schema**: Fixed `JSON.parse(task.labels_schema)` error - `labels_schema` is already a string array, not a JSON string.
+- **TaskCoordinator labels schema**: Fixed same `JSON.parse(task.labels_schema)` error.
+- **AgreementDashboard metrics**: Fixed `toFixed()` on undefined/NaN values using `Number.isFinite()` checks.
+- **AgreementDashboard title**: Updated page title to match test expectation ("Agreement: {task.name}").
+
+### Tests
+- All 11 frontend tests now pass (was 10 failed)
+- All 39 backend tests continue to pass
 
 ## 1.4.0 — work-in-progress checkpoint
 

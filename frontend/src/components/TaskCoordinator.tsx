@@ -100,7 +100,7 @@ export const TaskCoordinator: React.FC<TaskCoordinatorProps> = ({ selectedTaskId
                 <div className="task-info">
                   <span className="task-name">{task.name}</span>
                   <span className="task-meta">
-                    {task.task_type} • {task.labels_schema ? JSON.parse(task.labels_schema).length : 0} labels • {task.documents?.length || 0} docs
+                    {task.task_type} • {task.labels_schema ? task.labels_schema.length : 0} labels • {task.documents?.length || 0} docs
                   </span>
                   <span className="task-type-badge">{task.task_type}</span>
                 </div>

@@ -10,8 +10,12 @@ continue-implementation
 
 ### continue-implementation — Continue implementation and resolve known failures
 
-Status: in_progress
+Status: done
 
 Acceptance:
 - Run checks, fix failures, and implement the next planned feature
+
+Implementation: `frontend/src/components/ReconciliationQueue.tsx`, `frontend/src/components/TaskCoordinator.tsx`, `frontend/src/components/AgreementDashboard.tsx`
+
+Tests: `frontend/src/components/ReconciliationQueue.test.tsx`, `frontend/src/components/AgreementDashboard.test.tsx`, `backend/tests/`
 
