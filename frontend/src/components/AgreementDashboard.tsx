@@ -108,7 +108,7 @@ export const AgreementDashboard: React.FC<{ task: Task | null }> = ({ task }) =>
                     <tbody>
                       {summary.cohen_kappas.map((k, i) => (
                         <tr key={i}>
-                          <td>{k.annotator_1}</td><td>{k.annotator_2}</td><td>{Number.isFinite(k.kappa) ? k.kappa.toFixed(4) : "N/A"}</td><td>{Number.isFinite(k.observed_agreement) ? k.observed_agreement.toFixed(4) : "N/A"}</td><td>{Number.isFinite(k.expected_agreement) ? k.expected_agreement.toFixed(4) : "N/A"}</td><td>{k.interpretation}</td>
+                          <td>{k.annotator_1}</td><td>{k.annotator_2}</td><td>{Number.isFinite(k.cohen_kappa) ? k.cohen_kappa.toFixed(4) : "N/A"}</td><td>{Number.isFinite(k.observed_agreement) ? k.observed_agreement.toFixed(4) : "N/A"}</td><td>{Number.isFinite(k.expected_agreement) ? k.expected_agreement.toFixed(4) : "N/A"}</td><td>{k.interpretation}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -183,14 +183,14 @@ export const AgreementDashboard: React.FC<{ task: Task | null }> = ({ task }) =>
                 {summary.boundary_diagnostics.map((diag, i) => (
                   <div key={i} style={{ background: 'var(--bg-subtle)', padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid var(--border)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-                      <span className={`diag-badge diag-${diag.diagnostic_type}`}>{diag.diagnostic_type.replace('_', ' ')}</span>
+                      <span className={`diag-badge diag-${diag.misalignment_type}`}>{diag.misalignment_type.replace('_', ' ')}</span>
                       <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Doc: {diag.document_id.substring(0, 8)}...</span>
                     </div>
                     <div style={{ fontSize: '0.85rem' }}>
-                      <strong>Annotator 1 ({diag.annotator_1}):</strong> [{diag.span_1_start}, {diag.span_1_end}] "{diag.span_1_text}"
+                      <strong>Annotator 1 ({diag.annotator_1}):</strong> [{diag.span_1[0]}, {diag.span_1[1]}] "{diag.text_1}"
                     </div>
                     <div style={{ fontSize: '0.85rem' }}>
-                      <strong>Annotator 2 ({diag.annotator_2}):</strong> [{diag.span_2_start}, {diag.span_2_end}] "{diag.span_2_text}"
+                      <strong>Annotator 2 ({diag.annotator_2}):</strong> [{diag.span_2[0]}, {diag.span_2[1]}] "{diag.text_2}"
                     </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
                       Offset difference: {diag.offset_difference} chars

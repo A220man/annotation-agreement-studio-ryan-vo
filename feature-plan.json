@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "current_feature": "continue-implementation",
+  "current_feature": "fix-typescript-build-errors",
   "features": [
     {
       "id": "continue-implementation",
@@ -13,6 +13,26 @@
         "frontend/src/components/ReconciliationQueue.tsx",
         "frontend/src/components/TaskCoordinator.tsx",
         "frontend/src/components/AgreementDashboard.tsx"
+      ],
+      "tests": [
+        "frontend/src/components/ReconciliationQueue.test.tsx",
+        "frontend/src/components/AgreementDashboard.test.tsx",
+        "backend/tests/"
+      ]
+    },
+    {
+      "id": "fix-typescript-build-errors",
+      "title": "Fix TypeScript build errors in frontend components",
+      "status": "done",
+      "acceptance": [
+        "Frontend builds without TypeScript errors",
+        "All existing tests pass",
+        "Fix type mismatches in AgreementDashboard, ReconciliationQueue, TaskCoordinator"
+      ],
+      "implementation": [
+        "frontend/src/components/AgreementDashboard.tsx",
+        "frontend/src/components/ReconciliationQueue.tsx",
+        "frontend/src/components/TaskCoordinator.tsx"
       ],
       "tests": [
         "frontend/src/components/ReconciliationQueue.test.tsx",

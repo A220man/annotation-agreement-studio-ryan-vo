@@ -14,7 +14,6 @@ export const TaskCoordinator: React.FC<TaskCoordinatorProps> = ({ selectedTaskId
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [filterType, setFilterType] = useState<string>('');
 
   const [taskName, setTaskName] = useState('');
   const [taskType, setTaskType] = useState<'classification' | 'span'>('span');
@@ -27,19 +26,19 @@ export const TaskCoordinator: React.FC<TaskCoordinatorProps> = ({ selectedTaskId
   const fetchTasks = async () => {
     setLoading(true);
     try {
-      const data = await api.tasks.list({ type: filterType || undefined });
+      const data = await api.tasks.list();
       setTasks(data);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchTasks(); }, [filterType]);
+  useEffect(() => { fetchTasks(); }, []);
 
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
     const labels = labelsStr.split(',').map(l => l.trim()).filter(Boolean);
-    await api.tasks.create({ name: taskName, task_type: taskType, labels_schema: JSON.stringify(labels) });
+    await api.tasks.create({ name: taskName, task_type: taskType, labels_schema: labels });
     setShowCreateModal(false);
     setTaskName('');
     fetchTasks();
@@ -49,7 +48,7 @@ export const TaskCoordinator: React.FC<TaskCoordinatorProps> = ({ selectedTaskId
     e.preventDefault();
     if (!selectedTaskForImport) return;
     const docs = importText.split('\n').map(t => t.trim()).filter(Boolean);
-    await api.tasks.importDocuments(selectedTaskForImport, docs);
+    await api.tasks.addDocuments(selectedTaskForImport, docs.map(text => ({ text })));
     setShowImportModal(false);
     setImportText('');
     fetchTasks();
@@ -58,7 +57,14 @@ export const TaskCoordinator: React.FC<TaskCoordinatorProps> = ({ selectedTaskId
   const handleSeedSampleData = async () => {
     if (!taskName.trim()) return;
     const labels = labelsStr.split(',').map(l => l.trim()).filter(Boolean);
-    await api.tasks.seedSample({ name: taskName, task_type: taskType, labels_schema: JSON.stringify(labels) });
+    // Create task first, then add sample documents
+    const created = await api.tasks.create({ name: taskName, task_type: taskType, labels_schema: labels });
+    const sampleTexts = [
+      'Sample document one with entities.',
+      'Sample document two with different entities.',
+      'Third sample document for annotation.',
+    ];
+    await api.tasks.addDocuments(created.id, sampleTexts.map(text => ({ text })));
     setShowCreateModal(false);
     setTaskName('');
     fetchTasks();
@@ -100,7 +106,7 @@ export const TaskCoordinator: React.FC<TaskCoordinatorProps> = ({ selectedTaskId
                 <div className="task-info">
                   <span className="task-name">{task.name}</span>
                   <span className="task-meta">
-                    {task.task_type} • {task.labels_schema ? task.labels_schema.length : 0} labels • {task.documents?.length || 0} docs
+                    {task.task_type} • {task.labels_schema ? task.labels_schema.length : 0} labels • {task.document_count || 0} docs
                   </span>
                   <span className="task-type-badge">{task.task_type}</span>
                 </div>
@@ -199,3 +205,4 @@ export const TaskCoordinator: React.FC<TaskCoordinatorProps> = ({ selectedTaskId
     </div>
   );
 };
+

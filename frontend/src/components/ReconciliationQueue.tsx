@@ -107,7 +107,7 @@ export const ReconciliationQueue: React.FC<{ task: Task | null }> = ({ task }) =
                       {task.task_type === 'span' && consensus.spans && consensus.spans.length > 0 ? (
                         <>
                           {consensus.spans.map((s, i) => (
-                            <span key={i} className="recon-span" style={{ '--span-color': `hsl(${Math.abs(s.label.split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % 360}, 70%, 50%)` }}>
+                            <span key={i} className="recon-span" style={{ '--span-color': `hsl(${Math.abs(s.label.split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % 360}, 70%, 50%)` } as React.CSSProperties}>
                               {s.text} <span className="recon-span-label">{s.label}</span>
                             </span>
                           ))}
