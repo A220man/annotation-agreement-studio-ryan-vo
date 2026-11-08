@@ -6,17 +6,18 @@ import { AnnotationWorkbench } from './components/AnnotationWorkbench';
 import { AgreementDashboard } from './components/AgreementDashboard';
 import { ReconciliationQueue } from './components/ReconciliationQueue';
 import { EvaluationSection } from './components/EvaluationSection';
+import { AdvisorySection } from './components/AdvisorySection';
 import { AuditTrailView } from './components/AuditTrailView';
-import { Task } from './types/api';
+import { Task, DocumentItem } from './types/api';
 
 export const MainContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('tasks');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<DocumentItem | null>(null);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
-
       <main style={{ flex: 1, paddingBottom: '3rem' }}>
         {activeTab === 'tasks' && (
           <TaskCoordinator
@@ -34,6 +35,9 @@ export const MainContent: React.FC = () => {
         )}
         {activeTab === 'reconcile' && (
           <ReconciliationQueue task={selectedTask} />
+        )}
+        {activeTab === 'advisory' && (
+          <AdvisorySection task={selectedTask} selectedDocument={selectedDocument} />
         )}
         {activeTab === 'evaluation' && (
           <EvaluationSection />

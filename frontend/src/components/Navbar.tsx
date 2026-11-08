@@ -15,6 +15,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
     { id: 'workbench', label: 'Workbench' },
     { id: 'agreement', label: 'Agreement' },
     { id: 'reconcile', label: 'Adjudication' },
+    { id: 'advisory', label: 'Advisory' },
     { id: 'evaluation', label: 'Evaluation' },
     { id: 'audit', label: 'Audit Log' },
   ];
