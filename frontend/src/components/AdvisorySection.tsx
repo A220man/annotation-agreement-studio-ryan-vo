@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Task, DocumentItem, Annotation } from '../types/api';
+import { Task, DocumentItem } from '../types/api';
 import { api } from '../api/client';
-import { useAuth } from '../context/AuthContext';
 import { Brain, AlertTriangle, Loader2, X, Check } from 'lucide-react';
 
 interface AdvisoryStatus {
@@ -22,9 +21,7 @@ interface AdvisoryResponse {
 }
 
 export const AdvisorySection: React.FC<{ task: Task | null; selectedDocument: DocumentItem | null }> = ({ task, selectedDocument }) => {
-  const { role } = useAuth();
   const [status, setStatus] = useState<AdvisoryStatus | null>(null);
-  const [loading, setLoading] = useState(false);
   const [diagnosing, setDiagnosing] = useState(false);
   const [result, setResult] = useState<AdvisoryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -120,7 +117,7 @@ export const AdvisorySection: React.FC<{ task: Task | null; selectedDocument: Do
             placeholder={selectedDocument ? 'Using selected document...' : 'Paste document text here...'}
             className="form-textarea"
             style={{ minHeight: '120px', width: '100%', fontFamily: 'monospace', fontSize: '0.85rem' }}
-            disabled={selectedDocument || diagnosing}
+            disabled={!!selectedDocument || diagnosing}
           />
           {selectedDocument && (
             <p className="form-hint" style={{ marginTop: '0.25rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>

@@ -13,7 +13,7 @@ import { Task, DocumentItem } from './types/api';
 export const MainContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('tasks');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [selectedDocument, setSelectedDocument] = useState<DocumentItem | null>(null);
+  const [selectedDocument] = useState<DocumentItem | null>(null);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
