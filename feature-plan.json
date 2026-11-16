@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "current_feature": "fix-typescript-build-errors",
+  "current_feature": "continue-implementation",
   "features": [
     {
       "id": "continue-implementation",
