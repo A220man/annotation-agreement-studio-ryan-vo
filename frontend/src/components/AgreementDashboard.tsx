@@ -75,24 +75,24 @@ export const AgreementDashboard: React.FC<{ task: Task | null }> = ({ task }) =>
               <div className="metrics-grid">
                 <div className="metric-card">
                   <div className="metric-label">MEAN COHEN KAPPA</div>
-                  <div className="metric-value metric-primary">{summary.overall_mean_kappa.toFixed(4)}</div>
+                  <div className="metric-value metric-primary">Number.isFinite(summary.overall_mean_kappa) ? summary.overall_mean_kappa.toFixed(4) : "N/A"</div>
                   <div className="metric-label" style={{ color: 'var(--primary)' }}>
                     {summary.cohen_kappas.length > 0 ? summary.cohen_kappas[0].interpretation : 'N/A'}
                   </div>
                 </div>
                 <div className="metric-card">
                   <div className="metric-label">FLEISS KAPPA</div>
-                  <div className="metric-value metric-accent">{summary.fleiss_kappa !== undefined ? summary.fleiss_kappa.toFixed(4) : 'N/A'}</div>
+                  <div className="metric-value metric-accent">Number.isFinite(summary.fleiss_kappa) ? summary.fleiss_kappa.toFixed(4) : "N/A"</div>
                   <div className="metric-label" style={{ color: 'var(--accent)' }}>Need 3+ annotators</div>
                 </div>
                 <div className="metric-card">
                   <div className="metric-label">KRIPPENDORFF ALPHA</div>
-                  <div className="metric-value metric-success">{summary.krippendorff_alpha !== undefined ? summary.krippendorff_alpha.toFixed(4) : 'N/A'}</div>
+                  <div className="metric-value metric-success">Number.isFinite(summary.krippendorff_alpha) ? summary.krippendorff_alpha.toFixed(4) : "N/A"</div>
                   <div className="metric-label" style={{ color: 'var(--success)' }}>Need nominal data</div>
                 </div>
                 <div className="metric-card">
                   <div className="metric-label">AVG SPAN OVERLAP F1</div>
-                  <div className="metric-value metric-success">{(summary.token_span_f1 !== undefined ? summary.token_span_f1 * 100 : 0).toFixed(1)}%</div>
+                  <div className="metric-value metric-success">{(summary.token_span_f1 != null && Number.isFinite(summary.token_span_f1) ? summary.token_span_f1 * 100 : 0).toFixed(1)}%</div>
                 </div>
               </div>
 
