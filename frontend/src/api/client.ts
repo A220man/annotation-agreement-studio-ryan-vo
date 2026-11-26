@@ -133,6 +133,15 @@ export const api = {
     diagnose: (data: any) => request<any>('/api/advisory/diagnose', { method: 'POST', body: JSON.stringify(data) }),
   },
   audit: {
-    list: () => request<AuditLogEntry[]>('/api/audit'),
+    list: (filters?: { event_type?: string; entity_type?: string; user_id?: string; limit?: number; offset?: number }) => {
+      const params = new URLSearchParams();
+      if (filters?.event_type) params.set('event_type', filters.event_type);
+      if (filters?.entity_type) params.set('entity_type', filters.entity_type);
+      if (filters?.user_id) params.set('user_id', filters.user_id);
+      if (filters?.limit != null) params.set('limit', String(filters.limit));
+      if (filters?.offset != null) params.set('offset', String(filters.offset));
+      const qs = params.toString();
+      return request<AuditLogEntry[]>(qs ? `/api/audit?${qs}` : '/api/audit');
+    },
   },
 };
