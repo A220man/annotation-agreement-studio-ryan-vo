@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "current_feature": "continue-implementation",
+  "current_feature": "audit-log-filtering",
   "features": [
     {
       "id": "continue-implementation",
@@ -38,6 +38,24 @@
         "frontend/src/components/ReconciliationQueue.test.tsx",
         "frontend/src/components/AgreementDashboard.test.tsx",
         "backend/tests/"
+      ]
+    },
+    {
+      "id": "audit-log-filtering",
+      "title": "Audit log filtering in the web UI",
+      "status": "done",
+      "acceptance": [
+        "AuditTrailView exposes event_type, entity_type and user_id filter inputs plus Apply/Clear controls",
+        "api.audit.list sends the active filters as query parameters to GET /api/audit",
+        "Filter and clear actions trigger a reload and render only matching rows",
+        "Load failures surface an inline error message instead of a blank table"
+      ],
+      "implementation": [
+        "frontend/src/api/client.ts",
+        "frontend/src/components/AuditTrailView.tsx"
+      ],
+      "tests": [
+        "frontend/src/components/AuditTrailView.test.tsx"
       ]
     }
   ]

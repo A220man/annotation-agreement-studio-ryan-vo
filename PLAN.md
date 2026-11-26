@@ -4,7 +4,7 @@ Each round completes one feature or repair. Future items are planned, not implem
 
 ## Current round
 
-continue-implementation
+audit-log-filtering
 
 ## Roadmap
 
@@ -31,4 +31,18 @@ Acceptance:
 Implementation: `frontend/src/components/AgreementDashboard.tsx`, `frontend/src/components/ReconciliationQueue.tsx`, `frontend/src/components/TaskCoordinator.tsx`
 
 Tests: `frontend/src/components/ReconciliationQueue.test.tsx`, `frontend/src/components/AgreementDashboard.test.tsx`, `backend/tests/`
+
+### audit-log-filtering — Audit log filtering in the web UI
+
+Status: done
+
+Acceptance:
+- AuditTrailView exposes event_type, entity_type and user_id filter inputs plus Apply/Clear controls
+- api.audit.list sends the active filters as query parameters to GET /api/audit
+- Filter and clear actions trigger a reload and render only matching rows
+- Load failures surface an inline error message instead of a blank table
+
+Implementation: `frontend/src/api/client.ts`, `frontend/src/components/AuditTrailView.tsx`
+
+Tests: `frontend/src/components/AuditTrailView.test.tsx`
 
